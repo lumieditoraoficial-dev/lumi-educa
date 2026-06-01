@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import {
   InsertBook,
@@ -57,6 +57,24 @@ let _dbUnavailable = false;
 
 export function isLocalStoreMode() {
   return !process.env.DATABASE_URL || _dbUnavailable;
+}
+
+export async function checkDatabaseHealth() {
+  const db = await getDb();
+
+  if (!db) {
+    return {
+      ok: true,
+      mode: "local-json" as const,
+    };
+  }
+
+  await db.execute(sql`select 1`);
+
+  return {
+    ok: true,
+    mode: "postgresql" as const,
+  };
 }
 
 // Lazily create the drizzle instance so local tooling can run without a DB.

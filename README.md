@@ -58,6 +58,16 @@ pnpm start
 
 Um PC com 16 GB de RAM e PostgreSQL local e suficiente para desenvolvimento, testes e uso pequeno/medio. Para producao publica, use banco hospedado, backups automaticos e variaveis seguras.
 
+## Publicar online
+
+Para publicar com backend e PostgreSQL funcionando, use:
+
+```txt
+https://render.com/deploy?repo=https://github.com/lumieditoraoficial-dev/lumi-educa
+```
+
+Veja o passo completo em `DEPLOY_RENDER.md`.
+
 ## Qualidade
 
 ```bash

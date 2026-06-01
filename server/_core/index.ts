@@ -9,6 +9,7 @@ import { registerBookPdfRoutes } from "./bookPdf";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { checkDatabaseHealth } from "../db";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -35,6 +36,24 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  app.get("/api/health", async (_req, res) => {
+    try {
+      const database = await checkDatabaseHealth();
+      res.json({
+        ok: true,
+        service: "lumi-educa",
+        database,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(503).json({
+        ok: false,
+        service: "lumi-educa",
+        database: { ok: false, mode: "unavailable" },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   registerBookPdfRoutes(app);
