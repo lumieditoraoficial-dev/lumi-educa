@@ -8,11 +8,9 @@ C:\Users\guilh\Documents\Codex\2026-05-23\edu-smart-system
 
 ## Login mestre
 
-Senha local padrao:
+O acesso mestre fica oculto na tela de login em `Acesso interno`.
 
-```txt
-Lumi@2026
-```
+Defina a senha apenas em variavel de ambiente ou no arquivo `.env` local, que nao deve ser enviado ao GitHub.
 
 Perfis disponiveis:
 
@@ -73,4 +71,4 @@ PORT=3000
 NODE_ENV=production
 ```
 
-Nao use a senha mestra padrao em producao.
+Nao publique a senha mestra no repositorio.

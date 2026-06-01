@@ -11,17 +11,14 @@ Sistema educacional e editorial para escrita de livros por alunos, revisao pedag
 - Educador le producoes, devolve ajustes ou envia para coordenacao.
 - Coordenador aprova e publica livros na biblioteca digital.
 - Equipe acessa paginas em modo leitura; aluno nao conversa com IA.
+- Editor baixa o livro em PDF para revisao, arquivo e publicacao.
 - Backend preparado para PostgreSQL e fallback local em JSON para localhost.
 
-## Login mestre local
+## Acesso interno
 
-Senha padrao:
+O acesso mestre fica oculto na tela de login em `Acesso interno`.
 
-```txt
-Lumi@2026
-```
-
-Use essa senha na tela de login escolhendo o perfil desejado. Em producao, troque a variavel `MASTER_PASSWORD`.
+Configure a senha pela variavel `MASTER_PASSWORD` no arquivo `.env` local ou no painel do servidor em producao. Nunca publique essa senha no GitHub.
 
 ## Rodar localmente
 
@@ -43,7 +40,7 @@ Copie `.env.example` para `.env` quando for usar banco real.
 
 ```env
 DATABASE_URL=postgresql://usuario:senha@localhost:5432/lumi_educa
-MASTER_PASSWORD=Lumi@2026
+MASTER_PASSWORD=sua-senha-secreta
 PORT=3105
 ```
 

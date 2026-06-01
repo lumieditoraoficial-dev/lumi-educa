@@ -43,7 +43,6 @@ echo O servidor demorou para responder. Vou abrir mesmo assim.
 start "" "%URL%"
 echo.
 echo Lumi Educa aberto em: %URL%
-echo Senha mestra: Lumi@2026
 echo.
 echo Esta janela vai fechar em alguns segundos. O servidor fica ligado em segundo plano.
 timeout /t 5 /nobreak >nul

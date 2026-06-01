@@ -1,7 +1,7 @@
 $ErrorActionPreference = "SilentlyContinue"
 
 $Project = $PSScriptRoot
-$Port = 3105
+$Port = 3106
 $Url = "http://127.0.0.1:$Port/login"
 
 $listener = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
