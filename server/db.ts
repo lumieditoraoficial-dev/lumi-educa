@@ -1,5 +1,6 @@
 import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool, type PoolConfig } from "pg";
 import {
   InsertBook,
   InsertCertificate,
@@ -53,7 +54,22 @@ import {
 } from "./localStore";
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _pool: Pool | null = null;
 let _dbUnavailable = false;
+
+function createPoolConfig(connectionString: string): PoolConfig {
+  const databaseUrl = new URL(connectionString);
+  const shouldUseSsl =
+    databaseUrl.searchParams.has("sslmode") ||
+    databaseUrl.hostname.includes("supabase") ||
+    databaseUrl.hostname.includes("pooler");
+
+  return {
+    connectionString,
+    max: 10,
+    ...(shouldUseSsl ? { ssl: { rejectUnauthorized: false } } : {}),
+  };
+}
 
 export function isLocalStoreMode() {
   return !process.env.DATABASE_URL || _dbUnavailable;
@@ -83,7 +99,8 @@ export async function getDb() {
 
   if (!_db) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      _pool = new Pool(createPoolConfig(process.env.DATABASE_URL));
+      _db = drizzle(_pool);
     } catch (error) {
       console.warn("[Database] Failed to connect, using local JSON store:", error);
       _dbUnavailable = true;
