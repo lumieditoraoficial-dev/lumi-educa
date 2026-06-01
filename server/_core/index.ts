@@ -56,11 +56,14 @@ async function startServer() {
         database,
         timestamp: new Date().toISOString(),
       });
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown database error";
+      console.error("[Health] Database check failed:", message);
       res.status(503).json({
         ok: false,
         service: "lumi-educa",
         database: { ok: false, mode: "unavailable" },
+        error: message,
         timestamp: new Date().toISOString(),
       });
     }
