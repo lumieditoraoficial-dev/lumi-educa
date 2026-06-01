@@ -64,8 +64,13 @@ function createPoolConfig(connectionString: string): PoolConfig {
     databaseUrl.hostname.includes("supabase") ||
     databaseUrl.hostname.includes("pooler");
 
+  if (shouldUseSsl) {
+    databaseUrl.searchParams.delete("sslmode");
+    databaseUrl.searchParams.delete("uselibpqcompat");
+  }
+
   return {
-    connectionString,
+    connectionString: databaseUrl.toString(),
     max: 10,
     ...(shouldUseSsl ? { ssl: { rejectUnauthorized: false } } : {}),
   };
