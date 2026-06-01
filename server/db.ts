@@ -85,7 +85,11 @@ export async function checkDatabaseHealth() {
     };
   }
 
-  await db.execute(sql`select 1`);
+  if (_pool) {
+    await _pool.query("select 1");
+  } else {
+    await db.execute(sql`select 1`);
+  }
 
   return {
     ok: true,
