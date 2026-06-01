@@ -1,27 +1,48 @@
-# Publicar o Lumi Educa
+# Publicar o Lumi Educa gratis
 
 O Lumi Educa nao deve ser publicado como HTML puro, porque login, biblioteca, PDFs e banco precisam do backend Node rodando junto com PostgreSQL.
 
-## Link de publicacao
+O caminho gratis recomendado e:
 
-Use o Blueprint do Render:
+- Render Free para hospedar o site e o backend.
+- Supabase Free para hospedar o PostgreSQL.
+
+## 1. Criar banco gratis
+
+Abra:
+
+```txt
+https://supabase.com/dashboard/projects
+```
+
+Crie um projeto gratis e copie a string de conexao PostgreSQL em:
+
+```txt
+Project Settings > Database > Connection string
+```
+
+Use a conexao com pooler se o Supabase oferecer essa opcao.
+
+## 2. Publicar no Render gratis
+
+Abra:
 
 ```txt
 https://render.com/deploy?repo=https://github.com/lumieditoraoficial-dev/lumi-educa
 ```
 
-O arquivo `render.yaml` cria:
+O Render vai ler `render.yaml` e criar um servico web no plano `free`.
 
-- Servico web `lumi-educa`.
-- Banco PostgreSQL `lumi-educa-db`.
-- `DATABASE_URL` ligado automaticamente ao banco.
-- `JWT_SECRET` gerado automaticamente.
-- `MASTER_PASSWORD` pedido no painel do Render, sem ir para o GitHub.
-- Health check em `/api/health`.
+Quando ele pedir variaveis, preencha:
 
-## Configuracao recomendada
+```env
+DATABASE_URL=postgresql://...
+MASTER_PASSWORD=sua-senha-mestra-secreta
+```
 
-Para nao suspender por inatividade, use plano `starter` ou superior no servico web e no banco.
+O `JWT_SECRET` e gerado automaticamente pelo Render.
+
+## 3. Link da plataforma
 
 Depois do deploy, o Render mostra um link parecido com:
 
@@ -29,9 +50,19 @@ Depois do deploy, o Render mostra um link parecido com:
 https://lumi-educa.onrender.com
 ```
 
-O painel do banco fica no Dashboard do Render, dentro do recurso `lumi-educa-db`.
+Esse e o link para os alunos acessarem.
 
-## Conferencia
+## 4. Link do banco
+
+O banco fica no Supabase:
+
+```txt
+https://supabase.com/dashboard/projects
+```
+
+Entre no projeto criado e abra `Table Editor` para ver as tabelas.
+
+## 5. Conferir se esta funcionando
 
 Depois que publicar, abra:
 
@@ -51,3 +82,13 @@ Resultado esperado:
   }
 }
 ```
+
+## Limites do gratis
+
+O plano gratis pode dormir ou pausar por inatividade. Isso nao e bug do Lumi Educa; e limite do provedor gratuito.
+
+Para reduzir chance de pausa:
+
+- Acesse o sistema pelo menos uma vez por semana.
+- Confira `/api/health` quando for usar com alunos.
+- Faca backup do Supabase antes de testes importantes.

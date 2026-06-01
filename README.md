@@ -60,7 +60,7 @@ Um PC com 16 GB de RAM e PostgreSQL local e suficiente para desenvolvimento, tes
 
 ## Publicar online
 
-Para publicar com backend e PostgreSQL funcionando, use:
+Para publicar gratis com backend e PostgreSQL funcionando, use:
 
 ```txt
 https://render.com/deploy?repo=https://github.com/lumieditoraoficial-dev/lumi-educa
