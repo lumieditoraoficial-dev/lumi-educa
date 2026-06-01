@@ -36,7 +36,18 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  app.get("/api/health", async (_req, res) => {
+  app.get("/api/health", (_req, res) => {
+    res.json({
+      ok: true,
+      service: "lumi-educa",
+      database: {
+        configured: Boolean(process.env.DATABASE_URL),
+        mode: process.env.DATABASE_URL ? "postgresql" : "local-json",
+      },
+      timestamp: new Date().toISOString(),
+    });
+  });
+  app.get("/api/health/database", async (_req, res) => {
     try {
       const database = await checkDatabaseHealth();
       res.json({
@@ -45,7 +56,7 @@ async function startServer() {
         database,
         timestamp: new Date().toISOString(),
       });
-    } catch (error) {
+    } catch {
       res.status(503).json({
         ok: false,
         service: "lumi-educa",
