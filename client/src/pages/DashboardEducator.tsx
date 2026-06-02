@@ -97,6 +97,29 @@ export default function DashboardEducator() {
 
         <Card>
           <CardHeader>
+            <CardTitle>Alunos sob responsabilidade</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {students.length === 0 ? (
+              <p className="rounded-lg border border-dashed p-8 text-center text-slate-600 md:col-span-2 xl:col-span-3">
+                Nenhum aluno vinculado ainda.
+              </p>
+            ) : (
+              students.map((student) => (
+                <div key={student.id} className="rounded-lg border p-4">
+                  <p className="font-semibold text-slate-950">{student.name}</p>
+                  <p className="mt-1 text-sm text-slate-600">{student.email}</p>
+                  <Badge className="mt-3" variant="outline">
+                    Turma {student.className || "sem turma"}
+                  </Badge>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>Trabalhos enviados</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -118,6 +141,9 @@ export default function DashboardEducator() {
                         <Badge variant="outline">{statusLabels[book.status]}</Badge>
                       </div>
                       <p className="mt-1 text-sm text-slate-600">{book.description || "Sem descricao."}</p>
+                      <p className="mt-2 text-sm text-emerald-700">
+                        Ao abrir, corrija as paginas com status Enviado. As paginas ja corrigidas aparecem como referencia.
+                      </p>
                     </div>
                     <Button variant="outline" size="sm" asChild>
                       <a href={`/books/${book.id}/pages`}>

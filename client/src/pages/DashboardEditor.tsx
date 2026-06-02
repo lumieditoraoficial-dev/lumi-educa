@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import {
   Award,
@@ -15,12 +16,17 @@ import {
   FileDown,
   FileCheck2,
   FileText,
+  ImageUp,
+  Send,
   Sparkles,
   Target,
+  Trash2,
   Trophy,
+  Users,
   Wand2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 const statusLabels: Record<string, string> = {
   draft: "Rascunho",
@@ -59,6 +65,18 @@ function clamp(value: number, min = 0, max = 10) {
   return Math.min(max, Math.max(min, value));
 }
 
+function readCover(file: File, onLoad: (value: string) => void) {
+  if (file.size > 2_500_000) {
+    toast.error("Use uma capa com ate 2,5 MB.");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => onLoad(String(reader.result ?? ""));
+  reader.onerror = () => toast.error("Nao foi possivel carregar a capa.");
+  reader.readAsDataURL(file);
+}
+
 export default function DashboardEditor() {
   const [selectedBookId, setSelectedBookId] = useState<number | null>(null);
   const [goals, setGoals] = useState<EditorGoals>(() => {
@@ -73,12 +91,51 @@ export default function DashboardEditor() {
   const { data: books = [], isLoading } = trpc.books.listBooks.useQuery();
   const { data: users = [] } = trpc.users.listUsers.useQuery();
   const { data: evaluations = [] } = trpc.evaluations.listEvaluations.useQuery();
+  const utils = trpc.useUtils();
+
+  const updateBookMutation = trpc.books.updateBookDetails.useMutation({
+    onSuccess: async () => {
+      toast.success("Livro atualizado.");
+      await utils.books.listBooks.invalidate();
+      await utils.library.getPublishedBooks.invalidate();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const deleteBookMutation = trpc.books.deleteBook.useMutation({
+    onSuccess: async () => {
+      toast.success("Livro removido.");
+      await utils.books.listBooks.invalidate();
+      await utils.library.getPublishedBooks.invalidate();
+      setSelectedBookId(null);
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const publishMutation = trpc.publications.publishBook.useMutation({
+    onSuccess: async () => {
+      toast.success("Livro publicado na biblioteca.");
+      await utils.books.listBooks.invalidate();
+      await utils.library.getPublishedBooks.invalidate();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const assignStudentMutation = trpc.users.assignStudent.useMutation({
+    onSuccess: async () => {
+      toast.success("Aluno designado.");
+      await utils.users.listUsers.invalidate();
+      await utils.books.listBooks.invalidate();
+    },
+    onError: (error) => toast.error(error.message),
+  });
 
   useEffect(() => {
     localStorage.setItem(goalStorageKey, JSON.stringify(goals));
   }, [goals]);
 
   const students = useMemo(() => users.filter((user) => user.role === "student"), [users]);
+  const educators = useMemo(() => users.filter((user) => user.role === "educator"), [users]);
   const editableBooks = books.filter((book) => ["under_review", "approved", "published"].includes(book.status));
   const selectedBook = editableBooks.find((book) => book.id === selectedBookId) ?? editableBooks[0] ?? null;
 
@@ -101,6 +158,9 @@ export default function DashboardEditor() {
 
   const getStudentName = (authorId: number) =>
     users.find((user) => user.id === authorId)?.name || `Aluno #${authorId}`;
+
+  const getEducatorName = (educatorId?: number | null) =>
+    educators.find((educator) => educator.id === educatorId)?.name || "Sem educador";
 
   const getAiInsight = (book: (typeof books)[number]) => {
     const pages = numberValue(book.pageCount);
@@ -250,6 +310,14 @@ export default function DashboardEditor() {
                   </div>
                 ))}
               </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button variant="outline" asChild>
+                  <a href="/api/reports/monthly.pdf">
+                    <FileDown className="mr-2 h-4 w-4" />
+                    Baixar PDF mensal
+                  </a>
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -297,6 +365,73 @@ export default function DashboardEditor() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-emerald-700" />
+              Designar alunos para educadores e turmas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {students.length === 0 ? (
+              <p className="rounded-lg border border-dashed p-8 text-center text-slate-600">
+                Nenhum aluno cadastrado para designar.
+              </p>
+            ) : (
+              students.map((student) => (
+                <div key={student.id} className="grid gap-3 rounded-lg border p-4 lg:grid-cols-[1.2fr_0.9fr_0.9fr_auto] lg:items-center">
+                  <div className="flex items-center gap-3">
+                    {renderAvatar(student.name || "Aluno", student.avatarUrl)}
+                    <div>
+                      <p className="font-semibold text-slate-950">{student.name}</p>
+                      <p className="text-sm text-slate-600">
+                        {student.email} | {student.className || "Sem turma"} | {getEducatorName(student.assignedEducatorId)}
+                      </p>
+                    </div>
+                  </div>
+                  <Select
+                    defaultValue={student.assignedEducatorId ? String(student.assignedEducatorId) : "none"}
+                    onValueChange={(value) =>
+                      assignStudentMutation.mutate({
+                        studentId: student.id,
+                        educatorId: value === "none" ? null : Number(value),
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Educador" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sem educador</SelectItem>
+                      {educators.map((educator) => (
+                        <SelectItem key={educator.id} value={String(educator.id)}>
+                          {educator.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    defaultValue={student.className ?? ""}
+                    placeholder="Turma"
+                    onBlur={(event) =>
+                      assignStudentMutation.mutate({
+                        studentId: student.id,
+                        className: event.target.value.trim() || null,
+                      })
+                    }
+                  />
+                  <Button variant="outline" asChild>
+                    <a href={`/api/reports/student/${student.id}.pdf`}>
+                      <FileDown className="mr-2 h-4 w-4" />
+                      PDF
+                    </a>
+                  </Button>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-amber-600" />
               Melhor desempenho dos alunos
             </CardTitle>
@@ -325,6 +460,12 @@ export default function DashboardEditor() {
                     <Badge variant="secondary">{student.goalsHit}/3 metas batidas</Badge>
                     <Badge variant="outline">Media {student.averageScore?.toFixed(1) ?? "-"}</Badge>
                     <Badge variant="outline">{student.published} publicados</Badge>
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={`/api/reports/student/${student.id}.pdf`}>
+                        <FileDown className="mr-2 h-4 w-4" />
+                        PDF
+                      </a>
+                    </Button>
                   </div>
                 </div>
               ))
@@ -387,6 +528,43 @@ export default function DashboardEditor() {
                               PDF
                             </a>
                           </Button>
+                          <label className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md border px-4 py-2 text-sm font-medium hover:bg-slate-50">
+                            <ImageUp className="h-4 w-4" />
+                            Capa
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(event) => {
+                                const file = event.target.files?.[0];
+                                if (file) {
+                                  readCover(file, (coverImageUrl) => updateBookMutation.mutate({ bookId: book.id, coverImageUrl }));
+                                }
+                              }}
+                            />
+                          </label>
+                          {book.status === "approved" ? (
+                            <Button
+                              className="bg-emerald-700 hover:bg-emerald-800"
+                              disabled={publishMutation.isPending}
+                              onClick={() => publishMutation.mutate({ bookId: book.id })}
+                            >
+                              <Send className="mr-2 h-4 w-4" />
+                              Publicar
+                            </Button>
+                          ) : null}
+                          <Button
+                            variant="outline"
+                            disabled={deleteBookMutation.isPending}
+                            onClick={() => {
+                              if (confirm("Remover este livro da biblioteca/fila editorial?")) {
+                                deleteBookMutation.mutate({ bookId: book.id });
+                              }
+                            }}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4 text-red-600" />
+                            Excluir
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -413,10 +591,24 @@ export default function DashboardEditor() {
                 <div className="space-y-5">
                   <div className="rounded-lg border bg-slate-50 p-4">
                     <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                      <div>
+                      <div className="flex gap-4">
+                        {selectedBook.coverImageUrl ? (
+                          <img
+                            src={selectedBook.coverImageUrl}
+                            alt={selectedBook.title}
+                            className="h-28 w-20 rounded border object-cover shadow-sm"
+                          />
+                        ) : (
+                          <div className="flex h-28 w-20 items-center justify-center rounded border bg-white text-xs text-slate-500">
+                            Sem capa
+                          </div>
+                        )}
+                        <div>
                         <p className="text-sm text-slate-600">Livro selecionado</p>
                         <h3 className="text-2xl font-bold text-slate-950">{selectedBook.title}</h3>
                         <p className="mt-1 text-sm text-slate-600">Autor: {getStudentName(selectedBook.authorId)}</p>
+                        <p className="mt-1 text-sm text-slate-600">Status: {statusLabels[selectedBook.status] ?? selectedBook.status}</p>
+                        </div>
                       </div>
                       <div className="rounded-lg bg-white p-4 text-center shadow-sm">
                         <p className="text-sm text-slate-600">Nota IA</p>
@@ -476,6 +668,45 @@ export default function DashboardEditor() {
                         <FileDown className="mr-2 h-4 w-4" />
                         Baixar PDF
                       </a>
+                    </Button>
+                    <label className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md border px-4 py-2 text-sm font-medium hover:bg-slate-50">
+                      <ImageUp className="h-4 w-4" />
+                      Trocar capa
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (file) {
+                            readCover(file, (coverImageUrl) =>
+                              updateBookMutation.mutate({ bookId: selectedBook.id, coverImageUrl })
+                            );
+                          }
+                        }}
+                      />
+                    </label>
+                    {selectedBook.status === "approved" ? (
+                      <Button
+                        className="bg-emerald-700 hover:bg-emerald-800"
+                        disabled={publishMutation.isPending}
+                        onClick={() => publishMutation.mutate({ bookId: selectedBook.id })}
+                      >
+                        <Send className="mr-2 h-4 w-4" />
+                        Publicar na biblioteca
+                      </Button>
+                    ) : null}
+                    <Button
+                      variant="outline"
+                      disabled={deleteBookMutation.isPending}
+                      onClick={() => {
+                        if (confirm("Remover este livro da biblioteca/fila editorial?")) {
+                          deleteBookMutation.mutate({ bookId: selectedBook.id });
+                        }
+                      }}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4 text-red-600" />
+                      Excluir livro
                     </Button>
                   </div>
                 </div>

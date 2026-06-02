@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
-import { BarChart3, BookOpen, CheckCircle, Eye, Send, Users, XCircle } from "lucide-react";
+import { BarChart3, BookOpen, CheckCircle, Eye, Users, XCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -30,15 +30,6 @@ export default function DashboardCoordinator() {
       toast.success("Livro aprovado para publicacao.");
       await utils.books.listBooks.invalidate();
       await utils.evaluations.listEvaluations.invalidate();
-    },
-    onError: (error) => toast.error(error.message),
-  });
-
-  const publishMutation = trpc.publications.publishBook.useMutation({
-    onSuccess: async () => {
-      toast.success("Livro publicado na biblioteca digital.");
-      await utils.books.listBooks.invalidate();
-      await utils.library.getPublishedBooks.invalidate();
     },
     onError: (error) => toast.error(error.message),
   });
@@ -74,7 +65,7 @@ export default function DashboardCoordinator() {
         <div>
           <h1 className="text-4xl font-bold text-slate-950">Painel do Coordenador</h1>
           <p className="mt-2 text-slate-600">
-            Aprove obras, registre nota final de 0 a 10, publique livros e acompanhe indicadores gerais.
+            Aprove obras, registre nota final de 0 a 10 e encaminhe para preparacao editorial.
           </p>
         </div>
 
@@ -199,12 +190,12 @@ export default function DashboardCoordinator() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Prontos para publicacao</CardTitle>
+            <CardTitle>Aprovados aguardando editor</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {readyToPublish.length === 0 ? (
               <p className="rounded-lg border border-dashed p-8 text-center text-slate-600">
-                Nenhum livro aprovado aguardando publicacao.
+                Nenhum livro aprovado aguardando editor.
               </p>
             ) : (
               readyToPublish.map((book) => (
@@ -213,13 +204,11 @@ export default function DashboardCoordinator() {
                     <h3 className="font-semibold text-slate-950">{book.title}</h3>
                     <p className="mt-1 text-sm text-slate-600">{book.wordCount ?? 0} palavras</p>
                   </div>
-                  <Button
-                    className="bg-emerald-700 hover:bg-emerald-800"
-                    disabled={publishMutation.isPending}
-                    onClick={() => publishMutation.mutate({ bookId: book.id })}
-                  >
-                    <Send className="mr-2 h-4 w-4" />
-                    Publicar
+                  <Button variant="outline" asChild>
+                    <a href={`/books/${book.id}/pages`}>
+                      <Eye className="mr-2 h-4 w-4" />
+                      Ver paginas
+                    </a>
                   </Button>
                 </div>
               ))

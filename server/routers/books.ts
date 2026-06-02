@@ -1,10 +1,32 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
-import { createBook, createPage, deletePage, getAllBooks, getBookById, getBooksByAuthor, getPageById, getPagesByBook, updatePage } from "../db";
+import {
+  createBook,
+  createPage,
+  deleteBookById,
+  deletePage,
+  getAllBooks,
+  getBookById,
+  getBooksByAuthor,
+  getPageById,
+  getPagesByBook,
+  listUsers,
+  updateBook,
+  updatePage,
+} from "../db";
 import { TRPCError } from "@trpc/server";
+import { countWords } from "../_core/textReview";
 
 const staffRoles = ["educator", "coordinator", "editor", "admin"];
 const editableBookStatuses = ["draft", "submitted", "under_review", "approved", "rejected"];
+
+async function syncBookMetrics(bookId: number) {
+  const pages = await getPagesByBook(bookId);
+  await updateBook(bookId, {
+    pageCount: pages.length,
+    wordCount: pages.reduce((sum, page) => sum + countWords(page.content), 0),
+  });
+}
 
 export const booksRouter = router({
   // Get all books by current user (student)
@@ -20,7 +42,20 @@ export const booksRouter = router({
       throw new TRPCError({ code: "FORBIDDEN" });
     }
 
-    return getAllBooks();
+    const books = await getAllBooks();
+
+    if (ctx.user.role === "educator" && ctx.user.id > 0) {
+      const users = await listUsers();
+      const allowedStudentIds = new Set(
+        users
+          .filter((user) => user.role === "student")
+          .filter((user) => user.assignedEducatorId === ctx.user.id || user.assignedEducatorId == null)
+          .map((user) => user.id)
+      );
+      return books.filter((book) => allowedStudentIds.has(book.authorId));
+    }
+
+    return books;
   }),
 
   // Get book details
@@ -99,13 +134,15 @@ export const booksRouter = router({
         throw new TRPCError({ code: "CONFLICT", message: "Já existe uma página com esse número" });
       }
 
-      return createPage({
+      const page = await createPage({
         bookId: input.bookId,
         pageNumber: input.pageNumber,
         title: input.title,
         content: "",
         status: "draft",
       });
+      await syncBookMetrics(input.bookId);
+      return page;
     }),
 
   // Update page content
@@ -130,10 +167,14 @@ export const booksRouter = router({
         throw new TRPCError({ code: "BAD_REQUEST", message: "Este livro ja foi publicado e nao pode ser editado agora." });
       }
 
-      return updatePage(input.pageId, {
+      const contentChanged = input.content !== undefined && input.content !== page.content;
+      const updated = await updatePage(input.pageId, {
         title: input.title,
         content: input.content,
+        ...(contentChanged ? { status: "draft" as const } : {}),
       });
+      await syncBookMetrics(page.bookId);
+      return updated;
     }),
 
   // Delete page
@@ -152,6 +193,57 @@ export const booksRouter = router({
         throw new TRPCError({ code: "BAD_REQUEST", message: "Este livro ja foi publicado e nao pode ser alterado agora." });
       }
 
-      return deletePage(input.pageId);
+      const result = await deletePage(input.pageId);
+      await syncBookMetrics(page.bookId);
+      return result;
+    }),
+
+  updateBookDetails: protectedProcedure
+    .input(
+      z.object({
+        bookId: z.number(),
+        title: z.string().min(1).optional(),
+        subtitle: z.string().nullable().optional(),
+        description: z.string().nullable().optional(),
+        category: z.string().nullable().optional(),
+        series: z.string().nullable().optional(),
+        coverImageUrl: z.string().nullable().optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const book = await getBookById(input.bookId);
+      if (!book) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const canEditOwn = ctx.user.role === "student" && book.authorId === ctx.user.id && book.status !== "published";
+      const canEditEditorial = ["editor", "coordinator", "admin"].includes(ctx.user.role);
+
+      if (!canEditOwn && !canEditEditorial) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      return updateBook(input.bookId, {
+        ...(input.title !== undefined ? { title: input.title } : {}),
+        ...(input.subtitle !== undefined ? { subtitle: input.subtitle } : {}),
+        ...(input.description !== undefined ? { description: input.description } : {}),
+        ...(input.category !== undefined ? { category: input.category } : {}),
+        ...(input.series !== undefined ? { series: input.series } : {}),
+        ...(input.coverImageUrl !== undefined ? { coverImageUrl: input.coverImageUrl } : {}),
+      });
+    }),
+
+  deleteBook: protectedProcedure
+    .input(z.object({ bookId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const book = await getBookById(input.bookId);
+      if (!book) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const canDeleteOwn = ctx.user.role === "student" && book.authorId === ctx.user.id && book.status !== "published";
+      const canDeleteEditorial = ["editor", "admin"].includes(ctx.user.role);
+
+      if (!canDeleteOwn && !canDeleteEditorial) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      return deleteBookById(input.bookId);
     }),
 });

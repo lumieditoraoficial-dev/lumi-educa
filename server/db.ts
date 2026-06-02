@@ -19,6 +19,7 @@ import {
   users,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
+import { countWords } from "./_core/textReview";
 import {
   localCreateBook,
   localCreateCertificate,
@@ -47,6 +48,7 @@ import {
   localListUsers,
   localListEvaluations,
   localListCertificates,
+  localDeleteBook,
   localUpdateBook,
   localUpdatePage,
   localUpdateUser,
@@ -299,7 +301,10 @@ export async function createPage(page: InsertPage) {
   const db = await getDb();
   if (!db) return localCreatePage(page);
 
-  const [result] = await db.insert(pages).values(page).returning();
+  const [result] = await db
+    .insert(pages)
+    .values({ ...page, wordCount: page.wordCount ?? countWords(page.content) })
+    .returning();
   return result;
 }
 
@@ -309,7 +314,11 @@ export async function updatePage(pageId: number, updates: Partial<InsertPage>) {
 
   const [result] = await db
     .update(pages)
-    .set({ ...updates, updatedAt: new Date() })
+    .set({
+      ...updates,
+      ...(updates.content !== undefined ? { wordCount: countWords(updates.content) } : {}),
+      updatedAt: new Date(),
+    })
     .where(eq(pages.id, pageId))
     .returning();
   return result;
@@ -320,6 +329,24 @@ export async function deletePage(pageId: number) {
   if (!db) return localDeletePage(pageId);
 
   return db.delete(pages).where(eq(pages.id, pageId));
+}
+
+export async function deleteBookById(bookId: number) {
+  const db = await getDb();
+  if (!db) return localDeleteBook(bookId);
+
+  const bookEvaluations = await getEvaluationsByBook(bookId);
+  for (const evaluation of bookEvaluations) {
+    await db.delete(rubricScores).where(eq(rubricScores.evaluationId, evaluation.id));
+  }
+
+  await db.delete(publications).where(eq(publications.bookId, bookId));
+  await db.delete(certificates).where(eq(certificates.bookId, bookId));
+  await db.delete(evaluations).where(eq(evaluations.bookId, bookId));
+  await db.delete(pages).where(eq(pages.bookId, bookId));
+  await db.delete(books).where(eq(books.id, bookId));
+
+  return { success: true };
 }
 
 // Evaluations

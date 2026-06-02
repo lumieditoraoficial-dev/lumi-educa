@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
 import { BookOpen, GraduationCap, Lock, Mail, ShieldCheck, UserCog, Users } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 
@@ -27,12 +27,29 @@ const roleOptions: Array<{ role: Role; label: string; icon: typeof GraduationCap
   { role: "admin", label: "Administrador", icon: ShieldCheck },
 ];
 
+const motivationalQuotes = [
+  "Escrever e transformar pensamentos em futuro.",
+  "Cada pagina escrita e uma nova descoberta.",
+  "Nas paginas, o aluno encontra sua voz.",
+  "Toda historia comeca quando alguem decide continuar.",
+  "A leitura abre caminhos; a escrita acende possibilidades.",
+];
+
 export default function Login() {
   const [, navigate] = useLocation();
   const [loginMode, setLoginMode] = useState<"master" | "email">("email");
   const [selectedRole, setSelectedRole] = useState<Role>("admin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [quoteIndex, setQuoteIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setQuoteIndex((current) => (current + 1) % motivationalQuotes.length);
+    }, 4500);
+
+    return () => window.clearInterval(timer);
+  }, []);
 
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: async (data) => {
@@ -83,11 +100,10 @@ export default function Login() {
                 Escrita, avaliacao e publicacao estudantil
               </Badge>
               <h1 className="text-4xl font-semibold leading-tight tracking-normal sm:text-5xl lg:text-6xl">
-                Entre no Lumi Educa com a sua identidade visual.
+                Lumi Educa
               </h1>
-              <p className="mt-5 max-w-xl text-lg leading-8 text-[#0F3D2E]/72">
-                Cada perfil acessa somente o que precisa: aluno escreve, educador avalia, coordenador aprova,
-                editor acompanha metas e administrador controla tudo.
+              <p className="mt-5 min-h-[4.5rem] max-w-xl text-lg leading-8 text-[#0F3D2E]/72 transition-opacity">
+                {motivationalQuotes[quoteIndex]}
               </p>
             </div>
 

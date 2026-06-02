@@ -15,6 +15,7 @@ import BookPages from "./pages/BookPages";
 import BookReader from "./pages/BookReader";
 import Library from "./pages/Library";
 import Login from "./pages/Login";
+import Profile from "./pages/Profile";
 import Signup from "./pages/Signup";
 
 function Router() {
@@ -29,6 +30,7 @@ function Router() {
       <Route path={"/dashboard/coordinator"} component={DashboardCoordinator} />
       <Route path={"/dashboard/editor"} component={DashboardEditor} />
       <Route path={"/dashboard/admin"} component={DashboardAdmin} />
+      <Route path={"/profile"} component={Profile} />
       <Route path={"/page-editor"} component={PageEditor} />
       <Route path={"/books/:bookId/pages"}>
         {(params) => <BookPages bookId={Number(params.bookId)} />}

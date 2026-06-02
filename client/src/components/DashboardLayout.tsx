@@ -20,7 +20,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/useMobile";
-import { BookOpen, LayoutDashboard, Library, LogOut, PanelLeft, Settings, Users } from "lucide-react";
+import { BookOpen, LayoutDashboard, Library, LogOut, PanelLeft, Settings, UserRound, Users } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -124,6 +124,7 @@ function DashboardLayoutContent({
     ...(["educator", "coordinator", "editor", "admin"].includes(user?.role ?? "")
       ? [{ icon: Users, label: "Produções", path: dashboardByRole[user?.role ?? "educator"] ?? "/dashboard/educator" }]
       : []),
+    { icon: UserRound, label: "Meu perfil", path: "/profile" },
     { icon: Library, label: "Biblioteca", path: "/library" },
     ...(user?.role === "admin"
       ? [{ icon: Settings, label: "Administração", path: "/dashboard/admin" }]
@@ -236,6 +237,13 @@ function DashboardLayoutContent({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  onClick={() => setLocation("/profile")}
+                  className="cursor-pointer"
+                >
+                  <UserRound className="mr-2 h-4 w-4" />
+                  <span>Meu perfil</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={logout}
                   className="cursor-pointer text-destructive focus:text-destructive"

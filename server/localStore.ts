@@ -53,7 +53,7 @@ const emptyData = (): LocalData => ({
   aiSuggestions: [],
 });
 
-const dateKeys = ["createdAt", "updatedAt", "lastSignedIn", "publishedAt", "issuedAt"] as const;
+const dateKeys = ["createdAt", "updatedAt", "lastSignedIn", "publishedAt", "issuedAt", "aiCorrectedAt", "reviewedAt"] as const;
 
 function reviveDates<T extends Record<string, unknown>>(record: T): T {
   for (const key of dateKeys) {
@@ -155,6 +155,9 @@ export function getMasterUser(role: Role): User {
     loginMethod: "master",
     role,
     schoolId: null,
+    className: null,
+    assignedEducatorId: null,
+    isActive: true,
     createdAt: now,
     updatedAt: now,
     lastSignedIn: now,
@@ -200,6 +203,9 @@ export async function localCreateUser(user: InsertUser) {
       loginMethod: user.loginMethod ?? "email",
       role: user.role ?? "student",
       schoolId: user.schoolId ?? null,
+      className: user.className ?? null,
+      assignedEducatorId: user.assignedEducatorId ?? null,
+      isActive: user.isActive ?? true,
       createdAt: user.createdAt ?? now,
       updatedAt: user.updatedAt ?? now,
       lastSignedIn: user.lastSignedIn ?? now,
@@ -228,6 +234,9 @@ export async function localUpsertUser(user: InsertUser) {
         loginMethod: user.loginMethod ?? "email",
         role: user.role ?? "student",
         schoolId: user.schoolId ?? null,
+        className: user.className ?? null,
+        assignedEducatorId: user.assignedEducatorId ?? null,
+        isActive: user.isActive ?? true,
         createdAt: user.createdAt ?? now,
         updatedAt: user.updatedAt ?? now,
         lastSignedIn: user.lastSignedIn ?? now,
@@ -243,6 +252,9 @@ export async function localUpsertUser(user: InsertUser) {
       loginMethod: user.loginMethod ?? existing.loginMethod,
       role: user.role ?? existing.role,
       schoolId: user.schoolId ?? existing.schoolId,
+      className: user.className ?? existing.className ?? null,
+      assignedEducatorId: user.assignedEducatorId ?? existing.assignedEducatorId ?? null,
+      isActive: user.isActive ?? existing.isActive ?? true,
       lastSignedIn: user.lastSignedIn ?? now,
       updatedAt: now,
     });
@@ -323,6 +335,19 @@ export async function localUpdateBook(bookId: number, updates: Partial<InsertBoo
   });
 }
 
+export async function localDeleteBook(bookId: number) {
+  return mutateData((data) => {
+    const evaluationIds = new Set(data.evaluations.filter((evaluation) => evaluation.bookId === bookId).map((evaluation) => evaluation.id));
+    data.books = data.books.filter((book) => book.id !== bookId);
+    data.pages = data.pages.filter((page) => page.bookId !== bookId);
+    data.publications = data.publications.filter((publication) => publication.bookId !== bookId);
+    data.evaluations = data.evaluations.filter((evaluation) => evaluation.bookId !== bookId);
+    data.rubricScores = data.rubricScores.filter((score) => !evaluationIds.has(score.evaluationId));
+    data.certificates = data.certificates.filter((certificate) => certificate.bookId !== bookId);
+    return { success: true };
+  });
+}
+
 export async function localGetPageById(pageId: number) {
   const data = await readData();
   return data.pages.find((page) => page.id === pageId);
@@ -344,6 +369,12 @@ export async function localCreatePage(page: InsertPage) {
       pageNumber: page.pageNumber,
       title: page.title ?? null,
       content: page.content ?? "",
+      originalContent: page.originalContent ?? null,
+      aiCorrectedContent: page.aiCorrectedContent ?? null,
+      aiCorrectionSummary: page.aiCorrectionSummary ?? null,
+      aiCorrectedAt: page.aiCorrectedAt ?? null,
+      reviewedAt: page.reviewedAt ?? null,
+      reviewedBy: page.reviewedBy ?? null,
       wordCount: countWords(page.content),
       status: page.status ?? "draft",
       createdAt: page.createdAt ?? now,

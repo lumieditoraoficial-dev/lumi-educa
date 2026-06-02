@@ -113,7 +113,7 @@ export default function Home() {
                 <h2 className="mt-3 text-4xl font-semibold tracking-normal text-[#0F3D2E]">Da primeira pagina ao livro publicado.</h2>
               </div>
               <p className="max-w-xl text-base leading-7 text-[#0F3D2E]/70">
-                A identidade visual segue o mesmo caminho da marca: clara, confiavel, luminosa e com foco em resultado.
+                Cada pagina escrita aproxima o aluno da propria voz.
               </p>
             </div>
 

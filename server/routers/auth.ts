@@ -6,7 +6,7 @@ import { getSessionCookieOptions } from "../_core/cookies";
 import { ENV } from "../_core/env";
 import { sdk } from "../_core/sdk";
 import { publicProcedure, router } from "../_core/trpc";
-import { createUser, getUserByEmail } from "../db";
+import { createUser, getUserByEmail, updateUserById } from "../db";
 import { getMasterUser, masterRoles } from "../localStore";
 
 function hashPassword(password: string): string {
@@ -44,11 +44,13 @@ export const authRouter = router({
   register: publicProcedure
     .input(
       z.object({
-        email: z.string().email("Email inválido"),
-        password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
-        name: z.string().min(2, "Nome deve ter no mínimo 2 caracteres"),
+        email: z.string().email("Email invalido"),
+        password: z.string().min(6, "Senha deve ter no minimo 6 caracteres"),
+        name: z.string().min(2, "Nome deve ter no minimo 2 caracteres"),
         role: roleSchema.default("student"),
         avatarUrl: z.string().optional(),
+        className: z.string().optional(),
+        assignedEducatorId: z.number().nullable().optional(),
       })
     )
     .mutation(async ({ input }: any) => {
@@ -56,7 +58,7 @@ export const authRouter = router({
       const existingUser = await getUserByEmail(normalizedEmail);
 
       if (existingUser) {
-        throw new TRPCError({ code: "CONFLICT", message: "Email já registrado" });
+        throw new TRPCError({ code: "CONFLICT", message: "Email ja registrado" });
       }
 
       await createUser({
@@ -65,19 +67,22 @@ export const authRouter = router({
         passwordHash: hashPassword(input.password),
         avatarUrl: input.avatarUrl,
         role: input.role,
+        className: input.className,
+        assignedEducatorId: input.assignedEducatorId,
         loginMethod: "email",
         openId: `email_${normalizedEmail}`,
+        isActive: true,
         lastSignedIn: new Date(),
       });
 
-      return { success: true, message: "Usuário registrado com sucesso" };
+      return { success: true, message: "Usuario registrado com sucesso" };
     }),
 
   login: publicProcedure
     .input(
       z
         .object({
-          email: z.string().email("Email inválido").optional(),
+          email: z.string().email("Email invalido").optional(),
           password: z.string().min(1, "Informe a senha"),
           role: roleSchema.optional(),
         })
@@ -92,7 +97,7 @@ export const authRouter = router({
         }
 
         const user = getMasterUser(input.role);
-        await setSessionCookie(ctx, user.openId ?? "", user.name ?? "Usuário");
+        await setSessionCookie(ctx, user.openId ?? "", user.name ?? "Usuario");
 
         return {
           success: true,
@@ -107,7 +112,7 @@ export const authRouter = router({
 
       const email = input.email?.toLowerCase();
       if (!email) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Email obrigatório" });
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Email obrigatorio" });
       }
 
       const user = await getUserByEmail(email);
@@ -115,7 +120,12 @@ export const authRouter = router({
         throw new TRPCError({ code: "UNAUTHORIZED", message: "Email ou senha incorretos" });
       }
 
-      await setSessionCookie(ctx, user.openId ?? `email_${email}`, user.name ?? "Usuário");
+      if (user.isActive === false) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Perfil inativo. Fale com a administracao." });
+      }
+
+      await updateUserById(user.id, { lastSignedIn: new Date() });
+      await setSessionCookie(ctx, user.openId ?? `email_${email}`, user.name ?? "Usuario");
 
       return {
         success: true,

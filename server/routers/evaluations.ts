@@ -5,8 +5,10 @@ import {
   createEvaluation,
   createRubricScore,
   getBookById,
+  getBooksByAuthor,
   getEvaluationsByBook,
   getRubricScoresByEvaluation,
+  listUsers,
 } from "../db";
 
 export const evaluationsRouter = router({
@@ -74,6 +76,33 @@ export const evaluationsRouter = router({
       return getEvaluationsByBook(input.bookId);
     }),
 
+  getBookEvaluationDetails: protectedProcedure
+    .input(z.object({ bookId: z.number() }))
+    .query(async ({ input, ctx }) => {
+      const book = await getBookById(input.bookId);
+      if (!book) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (
+        ctx.user.id !== book.authorId &&
+        !["educator", "coordinator", "editor", "admin"].includes(ctx.user.role)
+      ) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      const [evaluations, users] = await Promise.all([getEvaluationsByBook(input.bookId), listUsers()]);
+      return evaluations
+        .slice()
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+        .map((evaluation) => {
+          const evaluator = users.find((user) => user.id === evaluation.evaluatorId);
+          return {
+            ...evaluation,
+            evaluatorName: evaluator?.name ?? "Equipe pedagogica",
+            evaluatorRole: evaluator?.role ?? null,
+          };
+        });
+    }),
+
   listEvaluations: protectedProcedure.query(async ({ ctx }) => {
     if (!["educator", "coordinator", "editor", "admin"].includes(ctx.user.role)) {
       throw new TRPCError({ code: "FORBIDDEN" });
@@ -81,6 +110,30 @@ export const evaluationsRouter = router({
 
     const { listEvaluations } = await import("../db");
     return listEvaluations();
+  }),
+
+  myEvaluations: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.user.role !== "student") {
+      throw new TRPCError({ code: "FORBIDDEN" });
+    }
+
+    const [studentBooks, users] = await Promise.all([getBooksByAuthor(ctx.user.id), listUsers()]);
+    const result = [];
+
+    for (const book of studentBooks) {
+      const bookEvaluations = await getEvaluationsByBook(book.id);
+      for (const evaluation of bookEvaluations) {
+        const evaluator = users.find((user) => user.id === evaluation.evaluatorId);
+        result.push({
+          ...evaluation,
+          bookTitle: book.title,
+          evaluatorName: evaluator?.name ?? "Equipe pedagogica",
+          evaluatorRole: evaluator?.role ?? null,
+        });
+      }
+    }
+
+    return result.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }),
 
   getEvaluationScores: protectedProcedure

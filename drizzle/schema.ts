@@ -41,12 +41,17 @@ export const users = pgTable(
     loginMethod: varchar("loginMethod", { length: 64 }).default("email"),
     role: userRoleEnum("role").default("student").notNull(),
     schoolId: integer("schoolId"),
+    className: varchar("className", { length: 120 }),
+    assignedEducatorId: integer("assignedEducatorId"),
+    isActive: boolean("isActive").default(true).notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().notNull(),
     lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
   },
   (table) => ({
     schoolIdIdx: index("schoolIdIdx").on(table.schoolId),
+    assignedEducatorIdx: index("userAssignedEducatorIdx").on(table.assignedEducatorId),
+    classNameIdx: index("userClassNameIdx").on(table.className),
   })
 );
 
@@ -140,6 +145,12 @@ export const pages = pgTable(
     pageNumber: integer("pageNumber").notNull(),
     title: varchar("title", { length: 255 }),
     content: text("content"),
+    originalContent: text("originalContent"),
+    aiCorrectedContent: text("aiCorrectedContent"),
+    aiCorrectionSummary: text("aiCorrectionSummary"),
+    aiCorrectedAt: timestamp("aiCorrectedAt"),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewedBy: integer("reviewedBy"),
     wordCount: integer("wordCount").default(0),
     status: pageStatusEnum("status").default("draft").notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
