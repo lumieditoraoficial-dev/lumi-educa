@@ -13,6 +13,13 @@ function hashPassword(password: string): string {
 }
 
 export const usersRouter = router({
+  heartbeat: protectedProcedure.mutation(async ({ ctx }) => {
+    if (ctx.user.id < 0) return { success: true };
+
+    await updateUserById(ctx.user.id, { lastSeenAt: new Date() });
+    return { success: true };
+  }),
+
   listUsers: protectedProcedure.query(async ({ ctx }) => {
     if (!["admin", "editor", "coordinator"].includes(ctx.user.role)) {
       throw new TRPCError({ code: "FORBIDDEN" });

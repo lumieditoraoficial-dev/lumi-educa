@@ -73,6 +73,7 @@ export const authRouter = router({
         openId: `email_${normalizedEmail}`,
         isActive: true,
         lastSignedIn: new Date(),
+        lastSeenAt: new Date(),
       });
 
       return { success: true, message: "Usuario registrado com sucesso" };
@@ -124,7 +125,8 @@ export const authRouter = router({
         throw new TRPCError({ code: "FORBIDDEN", message: "Perfil inativo. Fale com a administracao." });
       }
 
-      await updateUserById(user.id, { lastSignedIn: new Date() });
+      const signedInAt = new Date();
+      await updateUserById(user.id, { lastSignedIn: signedInAt, lastSeenAt: signedInAt });
       await setSessionCookie(ctx, user.openId ?? `email_${email}`, user.name ?? "Usuario");
 
       return {

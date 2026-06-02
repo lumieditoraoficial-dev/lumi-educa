@@ -47,6 +47,7 @@ export const users = pgTable(
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().notNull(),
     lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+    lastSeenAt: timestamp("lastSeenAt"),
   },
   (table) => ({
     schoolIdIdx: index("schoolIdIdx").on(table.schoolId),

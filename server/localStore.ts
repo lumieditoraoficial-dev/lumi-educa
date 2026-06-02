@@ -53,7 +53,16 @@ const emptyData = (): LocalData => ({
   aiSuggestions: [],
 });
 
-const dateKeys = ["createdAt", "updatedAt", "lastSignedIn", "publishedAt", "issuedAt", "aiCorrectedAt", "reviewedAt"] as const;
+const dateKeys = [
+  "createdAt",
+  "updatedAt",
+  "lastSignedIn",
+  "lastSeenAt",
+  "publishedAt",
+  "issuedAt",
+  "aiCorrectedAt",
+  "reviewedAt",
+] as const;
 
 function reviveDates<T extends Record<string, unknown>>(record: T): T {
   for (const key of dateKeys) {
@@ -161,6 +170,7 @@ export function getMasterUser(role: Role): User {
     createdAt: now,
     updatedAt: now,
     lastSignedIn: now,
+    lastSeenAt: now,
   };
 }
 
@@ -209,6 +219,7 @@ export async function localCreateUser(user: InsertUser) {
       createdAt: user.createdAt ?? now,
       updatedAt: user.updatedAt ?? now,
       lastSignedIn: user.lastSignedIn ?? now,
+      lastSeenAt: user.lastSeenAt ?? null,
     };
 
     data.users.push(record);
@@ -240,6 +251,7 @@ export async function localUpsertUser(user: InsertUser) {
         createdAt: user.createdAt ?? now,
         updatedAt: user.updatedAt ?? now,
         lastSignedIn: user.lastSignedIn ?? now,
+        lastSeenAt: user.lastSeenAt ?? null,
       });
       return;
     }
@@ -255,7 +267,8 @@ export async function localUpsertUser(user: InsertUser) {
       className: user.className ?? existing.className ?? null,
       assignedEducatorId: user.assignedEducatorId ?? existing.assignedEducatorId ?? null,
       isActive: user.isActive ?? existing.isActive ?? true,
-      lastSignedIn: user.lastSignedIn ?? now,
+      lastSignedIn: user.lastSignedIn ?? existing.lastSignedIn,
+      lastSeenAt: user.lastSeenAt ?? existing.lastSeenAt ?? null,
       updatedAt: now,
     });
   });

@@ -289,6 +289,7 @@ class SDKServer {
           email: userInfo.email ?? null,
           loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
           lastSignedIn: signedInAt,
+          lastSeenAt: signedInAt,
         });
         user = await db.getUserByOpenId(userInfo.openId);
       } catch (error) {
@@ -303,7 +304,7 @@ class SDKServer {
 
     await db.upsertUser({
       openId: user.openId,
-      lastSignedIn: signedInAt,
+      lastSeenAt: signedInAt,
     });
 
     return user;
@@ -334,6 +335,7 @@ function buildCronUser(
     createdAt: now,
     updatedAt: now,
     lastSignedIn: now,
+    lastSeenAt: now,
     taskUid: userInfo.taskUid ?? undefined,
     isCron: true,
   } as AuthenticatedUser;

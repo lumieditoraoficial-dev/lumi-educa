@@ -1,5 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { trpc } from "@/lib/trpc";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -110,11 +111,13 @@ function DashboardLayoutContent({
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
+  const heartbeatMutation = trpc.users.heartbeat.useMutation();
   const [location, setLocation] = useLocation();
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const lastHeartbeatRef = useRef(0);
   const isMobile = useIsMobile();
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: dashboardByRole[user?.role ?? "student"] ?? "/dashboard/student" },
@@ -137,6 +140,37 @@ function DashboardLayoutContent({
       setIsResizing(false);
     }
   }, [isCollapsed]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const sendHeartbeat = (force = false) => {
+      const now = Date.now();
+      if (!force && now - lastHeartbeatRef.current < 45_000) return;
+      lastHeartbeatRef.current = now;
+      heartbeatMutation.mutate(undefined, {
+        onError: () => {
+          lastHeartbeatRef.current = 0;
+        },
+      });
+    };
+
+    sendHeartbeat(true);
+
+    const interval = window.setInterval(() => sendHeartbeat(), 60_000);
+    const activityEvents = ["visibilitychange", "focus", "pointerdown", "keydown"];
+    const handleActivity = () => {
+      if (document.visibilityState === "hidden") return;
+      sendHeartbeat();
+    };
+
+    activityEvents.forEach((eventName) => window.addEventListener(eventName, handleActivity, { passive: true }));
+
+    return () => {
+      window.clearInterval(interval);
+      activityEvents.forEach((eventName) => window.removeEventListener(eventName, handleActivity));
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {

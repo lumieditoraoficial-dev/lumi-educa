@@ -16,6 +16,7 @@ function createContext(role: string = "student"): TrpcContext {
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedIn: new Date(),
+    lastSeenAt: new Date(),
   };
 
   return {

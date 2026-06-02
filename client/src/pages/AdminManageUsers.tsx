@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
-import { Camera, Edit2, Loader2, Lock, Mail, Plus, Search, Trash2, User, UserCheck, UserX } from "lucide-react";
+import { Activity, Camera, Edit2, Loader2, Lock, Mail, Plus, Search, Trash2, User, UserCheck, UserX } from "lucide-react";
 import { toast } from "sonner";
 
 type Role = "student" | "educator" | "coordinator" | "editor" | "admin";
@@ -67,13 +67,32 @@ function lastAccessLabel(value?: string | Date | null) {
   return date.toLocaleString("pt-BR");
 }
 
-function presence(user: any) {
-  if (user.isActive === false) return { label: "Inativo", className: "bg-slate-100 text-slate-700", icon: UserX };
-  if (!user.lastSignedIn) return { label: "Ativo sem acesso", className: "bg-amber-100 text-amber-800", icon: UserCheck };
+function lastActivity(user: any) {
+  return user.lastSeenAt ?? user.lastSignedIn ?? null;
+}
 
-  const days = (Date.now() - new Date(user.lastSignedIn).getTime()) / 86_400_000;
-  if (days > 14) return { label: "Ativo parado", className: "bg-amber-100 text-amber-800", icon: UserCheck };
-  return { label: "Ativo", className: "bg-emerald-100 text-emerald-800", icon: UserCheck };
+function isOnline(user: any, now: number) {
+  if (user.isActive === false || !user.lastSeenAt) return false;
+  const lastSeen = new Date(user.lastSeenAt).getTime();
+  if (Number.isNaN(lastSeen)) return false;
+  return now - lastSeen <= 2 * 60_000;
+}
+
+function isIdle(user: any, now: number) {
+  const activity = lastActivity(user);
+  if (user.isActive === false || !activity) return false;
+  const lastSeen = new Date(activity).getTime();
+  if (Number.isNaN(lastSeen)) return false;
+  return now - lastSeen > 14 * 86_400_000;
+}
+
+function presence(user: any, now: number) {
+  if (user.isActive === false) return { label: "Conta inativa", className: "bg-slate-100 text-slate-700", icon: UserX };
+  if (isOnline(user, now)) return { label: "Online agora", className: "bg-emerald-100 text-emerald-800", icon: Activity };
+  if (!lastActivity(user)) return { label: "Sem acesso", className: "bg-amber-100 text-amber-800", icon: UserCheck };
+
+  if (isIdle(user, now)) return { label: "Sem uso recente", className: "bg-amber-100 text-amber-800", icon: UserCheck };
+  return { label: "Offline", className: "bg-slate-100 text-slate-700", icon: UserCheck };
 }
 
 export default function AdminManageUsers() {
@@ -81,9 +100,17 @@ export default function AdminManageUsers() {
   const [editingUser, setEditingUser] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newUser, setNewUser] = useState({ ...blankUser });
+  const [now, setNow] = useState(() => Date.now());
 
-  const { data: users = [], isLoading, refetch } = trpc.users.listUsers.useQuery();
+  const { data: users = [], isLoading, refetch } = trpc.users.listUsers.useQuery(undefined, {
+    refetchInterval: 30_000,
+  });
   const educators = useMemo(() => users.filter((user) => user.role === "educator"), [users]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(interval);
+  }, []);
 
   const updateUserMutation = trpc.users.updateUser.useMutation({
     onSuccess: () => {
@@ -172,14 +199,12 @@ export default function AdminManageUsers() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         {[
           { label: "Total de usuarios", value: users.length },
-          { label: "Ativos", value: users.filter((user) => user.isActive !== false).length },
-          { label: "Inativos", value: users.filter((user) => user.isActive === false).length },
+          { label: "Online agora", value: users.filter((user) => isOnline(user, now)).length },
+          { label: "Contas habilitadas", value: users.filter((user) => user.isActive !== false).length },
+          { label: "Contas inativas", value: users.filter((user) => user.isActive === false).length },
           {
-            label: "Ativos parados",
-            value: users.filter((user) => {
-              if (user.isActive === false || !user.lastSignedIn) return false;
-              return (Date.now() - new Date(user.lastSignedIn).getTime()) / 86_400_000 > 14;
-            }).length,
+            label: "Sem uso 14 dias",
+            value: users.filter((user) => isIdle(user, now)).length,
           },
         ].map((item) => (
           <Card key={item.label}>
@@ -380,7 +405,7 @@ export default function AdminManageUsers() {
                 </label>
 
                 <label className="space-y-1.5">
-                  <span className="text-sm font-medium text-gray-700">Status</span>
+                  <span className="text-sm font-medium text-gray-700">Status da conta</span>
                   <Select
                     value={editingUser.isActive === false ? "inactive" : "active"}
                     onValueChange={(value) => setEditingUser({ ...editingUser, isActive: value === "active" })}
@@ -389,8 +414,8 @@ export default function AdminManageUsers() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="active">Ativo</SelectItem>
-                      <SelectItem value="inactive">Inativo</SelectItem>
+                      <SelectItem value="active">Conta habilitada</SelectItem>
+                      <SelectItem value="inactive">Conta inativa</SelectItem>
                     </SelectContent>
                   </Select>
                 </label>
@@ -471,9 +496,9 @@ export default function AdminManageUsers() {
                     <TableHead>Foto</TableHead>
                     <TableHead>Nome</TableHead>
                     <TableHead>Perfil</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Presenca</TableHead>
                     <TableHead>Turma</TableHead>
-                    <TableHead>Ultimo acesso</TableHead>
+                    <TableHead>Ultima atividade</TableHead>
                     <TableHead>Acoes</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -486,7 +511,7 @@ export default function AdminManageUsers() {
                     </TableRow>
                   ) : (
                     filteredUsers.map((user) => {
-                      const state = presence(user);
+                      const state = presence(user, now);
                       const Icon = state.icon;
                       const educator = educators.find((item) => item.id === user.assignedEducatorId);
                       return (
@@ -511,7 +536,7 @@ export default function AdminManageUsers() {
                             </Badge>
                           </TableCell>
                           <TableCell>{user.className || "-"}</TableCell>
-                          <TableCell className="text-sm text-gray-600">{lastAccessLabel(user.lastSignedIn)}</TableCell>
+                          <TableCell className="text-sm text-gray-600">{lastAccessLabel(lastActivity(user))}</TableCell>
                           <TableCell>
                             <div className="flex gap-2">
                               <Button variant="outline" size="sm" onClick={() => setEditingUser({ ...user })} className="gap-1">
