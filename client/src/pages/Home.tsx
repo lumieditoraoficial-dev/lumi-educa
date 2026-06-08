@@ -62,27 +62,37 @@ export default function Home() {
       </nav>
 
       <main>
-        <section className="relative isolate overflow-hidden bg-[#0F3D2E] text-[#F7F3E9]">
-          <div className="absolute left-0 top-0 h-64 w-80 bg-[#266B3D]" style={{ clipPath: "polygon(0 0, 100% 0, 36% 100%, 0 58%)" }} />
-          <div className="absolute left-0 top-0 h-48 w-64 bg-[#6DB33F]" style={{ clipPath: "polygon(0 0, 74% 0, 44% 100%, 0 35%)" }} />
-          <div className="absolute left-44 top-0 h-40 w-48 bg-[#F4C430]" style={{ clipPath: "polygon(0 0, 100% 0, 0 100%)" }} />
-          <div className="absolute bottom-0 right-0 h-80 w-[30rem] bg-[#266B3D]" style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%, 42% 44%)" }} />
-          <div className="absolute bottom-0 right-0 h-64 w-80 bg-[#6DB33F]" style={{ clipPath: "polygon(100% 0, 100% 100%, 28% 100%, 0 48%)" }} />
-          <div className="absolute bottom-0 right-44 h-40 w-52 bg-[#F4C430]" style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }} />
+        <section
+          className="relative isolate overflow-hidden bg-[#0F3D2E] bg-cover bg-center text-[#F7F3E9]"
+          style={{ backgroundImage: "url('/lumi-hero-dashboard.jpg')" }}
+        >
+          <div className="absolute inset-0 bg-[#061711]/75" />
+          <div className="absolute inset-0 bg-[#0F3D2E]/25" />
 
-          <div className="relative mx-auto flex min-h-[calc(100vh-76px)] max-w-7xl flex-col justify-center px-4 py-20 sm:px-6 lg:px-8">
+          <div className="relative mx-auto flex min-h-[calc(100vh-132px)] max-w-7xl flex-col justify-center px-4 py-16 sm:px-6 lg:px-8">
             <div className="max-w-4xl">
               <BrandLogo inverted showTagline className="mb-10" markClassName="bg-[#F7F3E9]" />
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.36em] text-[#BDE3A1]">
-                Plataforma educacional inteligente
+              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.28em] text-[#F4C430]">
+                Da primeira ideia ao livro publicado
               </p>
-              <h1 className="text-6xl font-semibold leading-none tracking-normal sm:text-7xl lg:text-8xl">
-                Lumi Educa
+              <h1 className="max-w-4xl text-5xl font-semibold leading-tight tracking-normal sm:text-6xl lg:text-7xl">
+                O lugar onde o aluno descobre a propria voz.
               </h1>
-              <p className="mt-7 max-w-2xl text-xl leading-8 text-[#F7F3E9]/88">
-                Escrita estudantil, avaliacao pedagogica e publicacao de livros digitais em uma experiencia moderna,
-                humana e segura.
+              <p className="mt-7 max-w-2xl text-xl leading-8 text-[#F7F3E9]/88 sm:text-2xl sm:leading-9">
+                Uma plataforma para escrever, revisar, acompanhar desempenho e transformar producoes escolares em livros digitais.
               </p>
+              <div className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
+                {[
+                  ["Escrita", "Editor com paginas e capitulos"],
+                  ["Avaliacao", "Notas, feedbacks e relatorios"],
+                  ["Publicacao", "Biblioteca digital aprovada"],
+                ].map(([title, description]) => (
+                  <div key={title} className="border-l border-[#F4C430] pl-4">
+                    <p className="font-semibold text-[#F4C430]">{title}</p>
+                    <p className="mt-1 text-sm leading-5 text-[#F7F3E9]/75">{description}</p>
+                  </div>
+                ))}
+              </div>
               <div className="mt-10 flex flex-col gap-3 sm:flex-row">
                 <Button
                   size="lg"

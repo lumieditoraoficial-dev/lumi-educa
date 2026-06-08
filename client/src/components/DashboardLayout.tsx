@@ -145,8 +145,9 @@ function DashboardLayoutContent({
     if (!user) return;
 
     const sendHeartbeat = (force = false) => {
+      if (document.visibilityState === "hidden") return;
       const now = Date.now();
-      if (!force && now - lastHeartbeatRef.current < 45_000) return;
+      if (!force && now - lastHeartbeatRef.current < 15_000) return;
       lastHeartbeatRef.current = now;
       heartbeatMutation.mutate(undefined, {
         onError: () => {
@@ -157,18 +158,23 @@ function DashboardLayoutContent({
 
     sendHeartbeat(true);
 
-    const interval = window.setInterval(() => sendHeartbeat(), 60_000);
-    const activityEvents = ["visibilitychange", "focus", "pointerdown", "keydown"];
+    const interval = window.setInterval(() => sendHeartbeat(), 20_000);
+    const activityEvents = ["focus", "pointermove", "pointerdown", "keydown", "touchstart"];
     const handleActivity = () => {
       if (document.visibilityState === "hidden") return;
       sendHeartbeat();
     };
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") sendHeartbeat(true);
+    };
 
     activityEvents.forEach((eventName) => window.addEventListener(eventName, handleActivity, { passive: true }));
+    document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
       window.clearInterval(interval);
       activityEvents.forEach((eventName) => window.removeEventListener(eventName, handleActivity));
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [user?.id]);
 

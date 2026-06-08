@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { dailyAccessStatus, formatLastAccess, hasAccessedToday, isOnlineNow, lastActivityAt } from "@/lib/insights";
 import { trpc } from "@/lib/trpc";
 import { Activity, Camera, Edit2, Loader2, Lock, Mail, Plus, Search, Trash2, User, UserCheck, UserX } from "lucide-react";
 import { toast } from "sonner";
@@ -60,22 +61,12 @@ function readPhoto(file: File, onLoad: (value: string) => void) {
   reader.readAsDataURL(file);
 }
 
-function lastAccessLabel(value?: string | Date | null) {
-  if (!value) return "Nunca acessou";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Nunca acessou";
-  return date.toLocaleString("pt-BR");
-}
-
 function lastActivity(user: any) {
-  return user.lastSeenAt ?? user.lastSignedIn ?? null;
+  return lastActivityAt(user);
 }
 
 function isOnline(user: any, now: number) {
-  if (user.isActive === false || !user.lastSeenAt) return false;
-  const lastSeen = new Date(user.lastSeenAt).getTime();
-  if (Number.isNaN(lastSeen)) return false;
-  return now - lastSeen <= 2 * 60_000;
+  return isOnlineNow(user, new Date(now));
 }
 
 function isIdle(user: any, now: number) {
@@ -103,12 +94,12 @@ export default function AdminManageUsers() {
   const [now, setNow] = useState(() => Date.now());
 
   const { data: users = [], isLoading, refetch } = trpc.users.listUsers.useQuery(undefined, {
-    refetchInterval: 30_000,
+    refetchInterval: 15_000,
   });
   const educators = useMemo(() => users.filter((user) => user.role === "educator"), [users]);
 
   useEffect(() => {
-    const interval = window.setInterval(() => setNow(Date.now()), 30_000);
+    const interval = window.setInterval(() => setNow(Date.now()), 15_000);
     return () => window.clearInterval(interval);
   }, []);
 
@@ -196,10 +187,11 @@ export default function AdminManageUsers() {
         <p className="mt-2 text-gray-600">Criar, editar, remover, acompanhar acesso e organizar turmas.</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
         {[
           { label: "Total de usuarios", value: users.length },
           { label: "Online agora", value: users.filter((user) => isOnline(user, now)).length },
+          { label: "Acessaram hoje", value: users.filter((user) => hasAccessedToday(user, new Date(now))).length },
           { label: "Contas habilitadas", value: users.filter((user) => user.isActive !== false).length },
           { label: "Contas inativas", value: users.filter((user) => user.isActive === false).length },
           {
@@ -497,6 +489,7 @@ export default function AdminManageUsers() {
                     <TableHead>Nome</TableHead>
                     <TableHead>Perfil</TableHead>
                     <TableHead>Presenca</TableHead>
+                    <TableHead>Acesso diario</TableHead>
                     <TableHead>Turma</TableHead>
                     <TableHead>Ultima atividade</TableHead>
                     <TableHead>Acoes</TableHead>
@@ -505,7 +498,7 @@ export default function AdminManageUsers() {
                 <TableBody>
                   {filteredUsers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="py-8 text-center text-gray-500">
+                      <TableCell colSpan={8} className="py-8 text-center text-gray-500">
                         Nenhum usuario encontrado.
                       </TableCell>
                     </TableRow>
@@ -514,6 +507,7 @@ export default function AdminManageUsers() {
                       const state = presence(user, now);
                       const Icon = state.icon;
                       const educator = educators.find((item) => item.id === user.assignedEducatorId);
+                      const access = dailyAccessStatus(user, new Date(now));
                       return (
                         <TableRow key={user.id} className="hover:bg-gray-50">
                           <TableCell>
@@ -535,8 +529,11 @@ export default function AdminManageUsers() {
                               {state.label}
                             </Badge>
                           </TableCell>
+                          <TableCell>
+                            <Badge className={access.className}>{access.label}</Badge>
+                          </TableCell>
                           <TableCell>{user.className || "-"}</TableCell>
-                          <TableCell className="text-sm text-gray-600">{lastAccessLabel(lastActivity(user))}</TableCell>
+                          <TableCell className="text-sm text-gray-600">{formatLastAccess(lastActivity(user))}</TableCell>
                           <TableCell>
                             <div className="flex gap-2">
                               <Button variant="outline" size="sm" onClick={() => setEditingUser({ ...user })} className="gap-1">

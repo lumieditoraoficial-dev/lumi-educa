@@ -15,10 +15,25 @@ import { checkDatabaseHealth } from "../db";
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
     const server = net.createServer();
-    server.listen(port, () => {
-      server.close(() => resolve(true));
-    });
-    server.on("error", () => resolve(false));
+    let finished = false;
+
+    const finish = (available: boolean) => {
+      if (finished) return;
+      finished = true;
+      server.removeAllListeners();
+
+      if (server.listening) {
+        server.close(() => resolve(available));
+        return;
+      }
+
+      resolve(available);
+    };
+
+    server.once("listening", () => finish(true));
+    server.once("error", () => finish(false));
+    server.listen({ port, host: "127.0.0.1" });
+    setTimeout(() => finish(false), 700);
   });
 }
 

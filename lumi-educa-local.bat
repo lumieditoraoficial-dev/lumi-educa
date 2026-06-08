@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-set "PROJECT=C:\Users\guilh\Documents\Codex\2026-05-23\edu-smart-system"
+set "PROJECT=%~dp0"
 set "PORT=3106"
 set "URL=http://127.0.0.1:%PORT%/login"
 

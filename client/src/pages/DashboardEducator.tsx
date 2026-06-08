@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { buildStudentInsights, formatLastAccess, formatScore, isWeekend } from "@/lib/insights";
 import { trpc } from "@/lib/trpc";
-import { AlertCircle, BookOpen, CheckCircle, Eye, Users } from "lucide-react";
-import { useState } from "react";
+import { AlertCircle, BookOpen, CheckCircle, Eye, Gauge, TrendingUp, UserCheck, Users, Wifi } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 const statusLabels: Record<string, string> = {
@@ -24,8 +25,31 @@ export default function DashboardEducator() {
   const utils = trpc.useUtils();
   const [feedbackByBook, setFeedbackByBook] = useState<Record<number, string>>({});
   const [scoreByBook, setScoreByBook] = useState<Record<number, string>>({});
-  const { data: books = [], isLoading } = trpc.books.listBooks.useQuery();
-  const { data: students = [] } = trpc.users.listStudents.useQuery();
+  const [now, setNow] = useState(() => new Date());
+  const { data: books = [], isLoading } = trpc.books.listBooks.useQuery(undefined, { refetchInterval: 30_000 });
+  const { data: students = [] } = trpc.users.listStudents.useQuery(undefined, { refetchInterval: 15_000 });
+  const { data: evaluations = [] } = trpc.evaluations.listEvaluations.useQuery(undefined, { refetchInterval: 30_000 });
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(new Date()), 15_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const studentInsights = useMemo(
+    () => buildStudentInsights(students, books, evaluations, now),
+    [students, books, evaluations, now]
+  );
+
+  const submittedBooks = books.filter((book) => book.status === "submitted");
+  const reviewedBooks = books.filter((book) => ["under_review", "approved", "published"].includes(book.status));
+  const scoredStudents = studentInsights.filter((item) => item.avgScore !== null);
+  const averageScore = scoredStudents.length
+    ? scoredStudents.reduce((sum, item) => sum + (item.avgScore ?? 0), 0) / scoredStudents.length
+    : null;
+  const onlineStudents = studentInsights.filter((item) => item.online);
+  const accessedToday = studentInsights.filter((item) => item.accessedToday);
+  const needAccessToday = studentInsights.filter((item) => item.dailyAccess.required && !item.dailyAccess.ok);
+  const attentionStudents = studentInsights.filter((item) => item.needsAttention).slice(0, 6);
 
   const approveMutation = trpc.publications.approveForCoordinator.useMutation({
     onSuccess: async () => {
@@ -49,9 +73,6 @@ export default function DashboardEducator() {
     return <DashboardLayout>Carregando...</DashboardLayout>;
   }
 
-  const submittedBooks = books.filter((book) => book.status === "submitted");
-  const reviewedBooks = books.filter((book) => ["under_review", "approved", "published"].includes(book.status));
-
   const getValidatedScore = (bookId: number) => {
     const rawScore = scoreByBook[bookId];
     const score = Number(rawScore);
@@ -70,15 +91,17 @@ export default function DashboardEducator() {
         <div>
           <h1 className="text-4xl font-bold text-slate-950">Painel do Educador</h1>
           <p className="mt-2 text-slate-600">
-            Revise producoes, registre nota de 0 a 10 e encaminhe livros para a coordenacao.
+            Acompanhe acesso, desempenho, notas e producoes dos alunos antes da revisao final.
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-5">
           {[
-            { label: "Pendentes de revisao", value: submittedBooks.length, icon: AlertCircle, color: "text-amber-600" },
-            { label: "Revisados", value: reviewedBooks.length, icon: CheckCircle, color: "text-emerald-700" },
-            { label: "Alunos cadastrados", value: students.length, icon: Users, color: "text-sky-700" },
+            { label: "Pendentes", value: submittedBooks.length, icon: AlertCircle, color: "text-amber-600" },
+            { label: "Online agora", value: onlineStudents.length, icon: Wifi, color: "text-emerald-700" },
+            { label: "Acessaram hoje", value: accessedToday.length, icon: UserCheck, color: "text-sky-700" },
+            { label: "Media da turma", value: formatScore(averageScore), icon: Gauge, color: "text-emerald-700" },
+            { label: "Alunos", value: students.length, icon: Users, color: "text-slate-700" },
           ].map((stat) => {
             const Icon = stat.icon;
             return (
@@ -95,6 +118,60 @@ export default function DashboardEducator() {
           })}
         </div>
 
+        <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-3">
+              <CardTitle>Acesso obrigatorio</CardTitle>
+              <Badge variant="outline">{isWeekend(now) ? "Fim de semana" : "Segunda a sexta"}</Badge>
+            </CardHeader>
+            <CardContent>
+              {isWeekend(now) ? (
+                <p className="rounded-lg border border-dashed p-5 text-sm text-slate-600">
+                  Hoje nao conta como dia obrigatorio. O acompanhamento volta automaticamente no proximo dia letivo.
+                </p>
+              ) : needAccessToday.length === 0 ? (
+                <p className="rounded-lg border border-emerald-100 bg-emerald-50 p-5 text-sm text-emerald-800">
+                  Todos os alunos acompanhados ja acessaram a plataforma hoje.
+                </p>
+              ) : (
+                <div className="grid gap-3 md:grid-cols-2">
+                  {needAccessToday.slice(0, 8).map((item) => (
+                    <div key={item.student.id} className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                      <p className="font-medium text-slate-950">{item.student.name}</p>
+                      <p className="mt-1 text-sm text-slate-600">Ultimo acesso: {formatLastAccess(item.lastActivity)}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Alunos em atencao</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {attentionStudents.length === 0 ? (
+                <p className="rounded-lg border border-dashed p-5 text-sm text-slate-600">
+                  Nenhum alerta critico neste momento.
+                </p>
+              ) : (
+                attentionStudents.map((item) => (
+                  <div key={item.student.id} className="flex items-center justify-between rounded-lg border p-3">
+                    <div>
+                      <p className="font-medium text-slate-950">{item.student.name}</p>
+                      <p className="text-sm text-slate-600">
+                        Nota media {formatScore(item.avgScore)} - {item.dailyAccess.label}
+                      </p>
+                    </div>
+                    <TrendingUp className="h-5 w-5 text-amber-600" />
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle>Alunos sob responsabilidade</CardTitle>
@@ -105,13 +182,40 @@ export default function DashboardEducator() {
                 Nenhum aluno vinculado ainda.
               </p>
             ) : (
-              students.map((student) => (
-                <div key={student.id} className="rounded-lg border p-4">
-                  <p className="font-semibold text-slate-950">{student.name}</p>
-                  <p className="mt-1 text-sm text-slate-600">{student.email}</p>
-                  <Badge className="mt-3" variant="outline">
-                    Turma {student.className || "sem turma"}
-                  </Badge>
+              studentInsights.map((item) => (
+                <div key={item.student.id} className="rounded-lg border p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-slate-950">{item.student.name}</p>
+                      <p className="mt-1 text-sm text-slate-600">{item.student.email}</p>
+                    </div>
+                    <Badge className={item.online ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"}>
+                      {item.online ? "Online" : "Offline"}
+                    </Badge>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Badge variant="outline">Turma {item.student.className || "sem turma"}</Badge>
+                    <Badge className={item.dailyAccess.className}>{item.dailyAccess.label}</Badge>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                    <div className="rounded-md bg-slate-50 p-3">
+                      <p className="text-slate-500">Nota media</p>
+                      <p className="text-xl font-bold text-slate-950">{formatScore(item.avgScore)}</p>
+                    </div>
+                    <div className="rounded-md bg-slate-50 p-3">
+                      <p className="text-slate-500">Paginas</p>
+                      <p className="text-xl font-bold text-slate-950">{item.totalPages}</p>
+                    </div>
+                    <div className="rounded-md bg-slate-50 p-3">
+                      <p className="text-slate-500">Livros</p>
+                      <p className="text-xl font-bold text-slate-950">{item.totalBooks}</p>
+                    </div>
+                    <div className="rounded-md bg-slate-50 p-3">
+                      <p className="text-slate-500">Publicados</p>
+                      <p className="text-xl font-bold text-slate-950">{item.publishedBooks}</p>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-xs text-slate-500">Ultima atividade: {formatLastAccess(item.lastActivity)}</p>
                 </div>
               ))
             )}
