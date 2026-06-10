@@ -15,6 +15,8 @@ import BookPages from "./pages/BookPages";
 import BookReader from "./pages/BookReader";
 import Library from "./pages/Library";
 import Login from "./pages/Login";
+import Messages from "./pages/Messages";
+import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import Signup from "./pages/Signup";
 
@@ -30,6 +32,8 @@ function Router() {
       <Route path={"/dashboard/coordinator"} component={DashboardCoordinator} />
       <Route path={"/dashboard/editor"} component={DashboardEditor} />
       <Route path={"/dashboard/admin"} component={DashboardAdmin} />
+      <Route path={"/messages"} component={Messages} />
+      <Route path={"/notifications"} component={Notifications} />
       <Route path={"/profile"} component={Profile} />
       <Route path={"/page-editor"} component={PageEditor} />
       <Route path={"/books/:bookId/pages"}>

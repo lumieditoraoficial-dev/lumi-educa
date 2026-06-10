@@ -21,7 +21,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/useMobile";
-import { BookOpen, LayoutDashboard, Library, LogOut, PanelLeft, Settings, UserRound, Users } from "lucide-react";
+import { Bell, BookOpen, LayoutDashboard, Library, LogOut, MessageCircle, PanelLeft, Settings, UserRound, Users } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -112,6 +112,8 @@ function DashboardLayoutContent({
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
   const heartbeatMutation = trpc.users.heartbeat.useMutation();
+  const switchMasterRoleMutation = trpc.auth.switchMasterRole.useMutation();
+  const utils = trpc.useUtils();
   const [location, setLocation] = useLocation();
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
@@ -127,6 +129,8 @@ function DashboardLayoutContent({
     ...(["educator", "coordinator", "editor", "admin"].includes(user?.role ?? "")
       ? [{ icon: Users, label: "Produções", path: dashboardByRole[user?.role ?? "educator"] ?? "/dashboard/educator" }]
       : []),
+    { icon: MessageCircle, label: "Conversas", path: "/messages" },
+    { icon: Bell, label: "Notificações", path: "/notifications" },
     { icon: UserRound, label: "Meu perfil", path: "/profile" },
     { icon: Library, label: "Biblioteca", path: "/library" },
     ...(user?.role === "admin"
@@ -134,6 +138,20 @@ function DashboardLayoutContent({
       : []),
   ];
   const activeMenuItem = menuItems.find(item => item.path === location);
+  const masterRoles = [
+    { role: "student", label: "Aluno" },
+    { role: "educator", label: "Educador" },
+    { role: "coordinator", label: "Coordenador" },
+    { role: "editor", label: "Editor" },
+    { role: "admin", label: "Administrador" },
+  ];
+
+  const switchMasterRole = async (role: string) => {
+    const result = await switchMasterRoleMutation.mutateAsync({ role: role as any });
+    utils.auth.me.setData(undefined, result.user as any);
+    await utils.auth.me.invalidate();
+    setLocation(dashboardByRole[role] ?? "/dashboard/student");
+  };
 
   useEffect(() => {
     if (isCollapsed) {
@@ -277,6 +295,18 @@ function DashboardLayoutContent({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
+                {user?.id < 0
+                  ? masterRoles.map((item) => (
+                      <DropdownMenuItem
+                        key={item.role}
+                        onClick={() => switchMasterRole(item.role)}
+                        className="cursor-pointer"
+                      >
+                        <Users className="mr-2 h-4 w-4" />
+                        <span>{item.label}</span>
+                      </DropdownMenuItem>
+                    ))
+                  : null}
                 <DropdownMenuItem
                   onClick={() => setLocation("/profile")}
                   className="cursor-pointer"

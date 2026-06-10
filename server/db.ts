@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool, type PoolConfig } from "pg";
 import {
@@ -25,6 +25,7 @@ import {
   localCreateCertificate,
   localCreateEvaluation,
   localCreateNotification,
+  localDeleteNotification,
   localCreatePage,
   localCreatePublication,
   localCreateRubricScore,
@@ -49,6 +50,8 @@ import {
   localListEvaluations,
   localListCertificates,
   localDeleteBook,
+  localMarkAllNotificationsAsRead,
+  localMarkNotificationAsRead,
   localUpdateBook,
   localUpdatePage,
   localUpdateUser,
@@ -406,11 +409,74 @@ export async function createNotification(notification: InsertNotification) {
   return result;
 }
 
-export async function getNotificationsByUser(userId: number) {
+export async function getNotificationsByUser(userId: number, unreadOnly = false, limit = 50) {
   const db = await getDb();
-  if (!db) return localGetNotificationsByUser(userId);
+  if (!db) return localGetNotificationsByUser(userId, unreadOnly, limit);
 
-  return db.select().from(notifications).where(eq(notifications.userId, userId));
+  if (unreadOnly) {
+    return db
+      .select()
+      .from(notifications)
+      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)))
+      .orderBy(desc(notifications.createdAt))
+      .limit(limit);
+  }
+
+  return db
+    .select()
+    .from(notifications)
+    .where(eq(notifications.userId, userId))
+    .orderBy(desc(notifications.createdAt))
+    .limit(limit);
+}
+
+export async function markNotificationAsRead(notificationId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return localMarkNotificationAsRead(notificationId, userId);
+
+  const [notification] = await db
+    .select()
+    .from(notifications)
+    .where(eq(notifications.id, notificationId))
+    .limit(1);
+
+  if (!notification || notification.userId !== userId) return null;
+
+  const [updated] = await db
+    .update(notifications)
+    .set({ isRead: true })
+    .where(eq(notifications.id, notificationId))
+    .returning();
+
+  return updated;
+}
+
+export async function markAllNotificationsAsRead(userId: number) {
+  const db = await getDb();
+  if (!db) return localMarkAllNotificationsAsRead(userId);
+
+  await db
+    .update(notifications)
+    .set({ isRead: true })
+    .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+
+  return { success: true };
+}
+
+export async function deleteNotificationForUser(notificationId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return localDeleteNotification(notificationId, userId);
+
+  const [notification] = await db
+    .select()
+    .from(notifications)
+    .where(eq(notifications.id, notificationId))
+    .limit(1);
+
+  if (!notification || notification.userId !== userId) return null;
+
+  await db.delete(notifications).where(eq(notifications.id, notificationId));
+  return { success: true };
 }
 
 // Certificates

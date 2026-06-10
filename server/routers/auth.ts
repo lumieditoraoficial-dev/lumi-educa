@@ -5,7 +5,7 @@ import { COOKIE_NAME, ONE_YEAR_MS } from "../../shared/const";
 import { getSessionCookieOptions } from "../_core/cookies";
 import { ENV } from "../_core/env";
 import { sdk } from "../_core/sdk";
-import { publicProcedure, router } from "../_core/trpc";
+import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { createUser, getUserByEmail, updateUserById } from "../db";
 import { getMasterUser, masterRoles } from "../localStore";
 
@@ -147,6 +147,32 @@ export const authRouter = router({
     });
     return { success: true };
   }),
+
+  switchMasterRole: protectedProcedure
+    .input(z.object({ role: roleSchema }))
+    .mutation(async ({ input, ctx }: any) => {
+      if (ctx.user.id >= 0) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Troca rapida disponivel apenas no acesso interno." });
+      }
+
+      if (!masterRoles.includes(input.role)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Perfil invalido." });
+      }
+
+      const user = getMasterUser(input.role);
+      await setSessionCookie(ctx, user.openId ?? "", user.name ?? "Usuario");
+
+      return {
+        success: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          avatarUrl: user.avatarUrl,
+        },
+      };
+    }),
 
   me: publicProcedure.query((opts: any) => opts.ctx.user),
 });
