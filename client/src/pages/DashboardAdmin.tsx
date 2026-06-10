@@ -3,14 +3,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { Activity, ArrowLeft, BookOpen, Database, Settings, ShieldCheck, Users } from "lucide-react";
+import { Activity, ArrowLeft, BookOpen, Database, Eye, Settings, ShieldCheck, Users } from "lucide-react";
 import { useState } from "react";
 import AdminActivity from "./AdminActivity";
+import AdminBookObserver from "./AdminBookObserver";
 import AdminDatabase from "./AdminDatabase";
 import AdminManageUsers from "./AdminManageUsers";
 import AdminSystemSettings from "./AdminSystemSettings";
 
-type AdminPage = "overview" | "users" | "settings" | "database" | "activity";
+type AdminPage = "overview" | "users" | "books" | "settings" | "database" | "activity";
 
 export default function DashboardAdmin() {
   const [currentPage, setCurrentPage] = useState<AdminPage>("overview");
@@ -20,6 +21,7 @@ export default function DashboardAdmin() {
   if (currentPage !== "overview") {
     const pageTitle: Record<Exclude<AdminPage, "overview">, string> = {
       users: "Gerenciar usuários",
+      books: "Observação dos livros",
       settings: "Configurações",
       database: "Banco de dados",
       activity: "Atividade",
@@ -34,6 +36,7 @@ export default function DashboardAdmin() {
           </Button>
           <h1 className="sr-only">{pageTitle[currentPage]}</h1>
           {currentPage === "users" && <AdminManageUsers />}
+          {currentPage === "books" && <AdminBookObserver />}
           {currentPage === "settings" && <AdminSystemSettings />}
           {currentPage === "database" && <AdminDatabase />}
           {currentPage === "activity" && <AdminActivity />}
@@ -85,6 +88,12 @@ export default function DashboardAdmin() {
               title: "Gerenciar usuários",
               description: "Criar alunos, educadores, coordenadores, editores e administradores.",
               icon: Users,
+            },
+            {
+              id: "books",
+              title: "Observação dos livros",
+              description: "Ver todos os livros, páginas e textos como leitura administrativa sem alterar o fluxo.",
+              icon: Eye,
             },
             {
               id: "settings",
