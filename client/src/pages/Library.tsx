@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
-import { BookOpen, Search, Star } from "lucide-react";
+import { BookOpen, Search, Star, Trophy } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
 
@@ -22,21 +22,39 @@ export default function Library() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F7F3E9]">
-      <div className="relative overflow-hidden bg-[#0F3D2E] px-4 py-12 text-white sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8F7EB]">
+      <div className="lumi-cup-surface lumi-field-lines relative overflow-hidden px-4 py-14 text-white sm:px-6 lg:px-8">
         <div className="absolute bottom-0 right-0 h-44 w-72 bg-[#266B3D]" style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%, 40% 46%)" }} />
-        <div className="absolute bottom-0 right-0 h-36 w-52 bg-[#6DB33F]" style={{ clipPath: "polygon(100% 0, 100% 100%, 26% 100%, 0 50%)" }} />
-        <div className="absolute bottom-0 right-32 h-24 w-36 bg-[#F4C430]" style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }} />
+        <div className="absolute bottom-0 right-0 h-36 w-52 bg-[#F4C430]" style={{ clipPath: "polygon(100% 0, 100% 100%, 26% 100%, 0 50%)" }} />
+        <div className="absolute bottom-0 right-32 h-24 w-36 bg-[#123C8C]" style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }} />
         <div className="relative mx-auto max-w-7xl">
           <div className="mb-5">
             <BrandLogo inverted showTagline />
           </div>
-          <h1 className="text-4xl font-semibold tracking-normal">Biblioteca Digital</h1>
-          <p className="mt-2 text-[#F7F3E9]/85">Leia obras estudantis publicadas depois da revisao pedagogica.</p>
+          <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+            <div>
+              <p className="mb-3 inline-flex rounded-full border border-[#F4C430]/40 bg-[#F4C430]/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#F4C430]">
+                Arquibancada literária
+              </p>
+              <h1 className="text-4xl font-semibold tracking-normal">Biblioteca Digital</h1>
+              <p className="mt-2 max-w-2xl text-[#F7F3E9]/85">
+                Leia as obras publicadas depois da revisao pedagogica e acompanhe os destaques da temporada.
+              </p>
+            </div>
+            <div className="rounded-lg border border-white/16 bg-white/10 p-4 backdrop-blur">
+              <div className="flex items-center gap-3">
+                <Trophy className="h-7 w-7 text-[#F4C430]" />
+                <div>
+                  <p className="text-sm text-white/65">Livros publicados</p>
+                  <p className="text-2xl font-bold text-white">{books?.length ?? 0}</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="sticky top-0 z-30 border-b border-[#0F3D2E]/10 bg-white">
+      <div className="sticky top-0 z-30 border-b border-[#0F3D2E]/10 bg-white/95 backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <div className="md:col-span-2">
@@ -93,13 +111,13 @@ export default function Library() {
               if (!book) return null;
 
               return (
-                <Card key={pub.id} className="overflow-hidden rounded-lg transition-shadow hover:shadow-xl">
+                <Card key={pub.id} className="lumi-cup-card overflow-hidden rounded-lg transition-transform hover:-translate-y-1 hover:shadow-xl">
                   {book.coverImageUrl ? (
-                    <div className="flex h-48 items-center justify-center bg-gradient-to-br from-[#266B3D] via-[#6DB33F] to-[#F4C430]">
+                    <div className="flex h-48 items-center justify-center bg-gradient-to-br from-[#0F3D2E] via-[#123C8C] to-[#F4C430]">
                       <img src={book.coverImageUrl} alt={book.title} className="h-full w-full object-cover" />
                     </div>
                   ) : (
-                    <div className="flex h-48 items-center justify-center bg-gradient-to-br from-[#266B3D] via-[#6DB33F] to-[#F4C430]">
+                    <div className="lumi-field-lines flex h-48 items-center justify-center bg-gradient-to-br from-[#0F3D2E] via-[#123C8C] to-[#F4C430]">
                       <BookOpen className="h-16 w-16 text-white opacity-65" />
                     </div>
                   )}
@@ -125,8 +143,8 @@ export default function Library() {
                       </div>
                     </div>
 
-                    <Button className="w-full bg-[#0F3D2E] hover:bg-[#174f3d]" onClick={() => navigate(`/library/book/${book.id}`)}>
-                      Ler Agora
+                    <Button className="w-full bg-[#0F3D2E] font-semibold hover:bg-[#174f3d]" onClick={() => navigate(`/library/book/${book.id}`)}>
+                      Ler agora
                     </Button>
                   </CardContent>
                 </Card>

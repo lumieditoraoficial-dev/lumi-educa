@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { Activity, ArrowLeft, BookOpen, Database, Eye, Settings, ShieldCheck, Users } from "lucide-react";
+import { Activity, ArrowLeft, BookOpen, Database, Eye, Settings, ShieldCheck, Trophy, Users } from "lucide-react";
 import { useState } from "react";
 import AdminActivity from "./AdminActivity";
 import AdminBookObserver from "./AdminBookObserver";
@@ -51,12 +51,27 @@ export default function DashboardAdmin() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div>
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="h-9 w-9 text-emerald-700" />
-            <h1 className="text-4xl font-bold text-slate-950">Painel administrativo</h1>
+        <div className="lumi-cup-surface lumi-field-lines overflow-hidden rounded-xl p-6 text-white shadow-xl">
+          <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+            <div>
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="h-9 w-9 text-[#F4C430]" />
+                <h1 className="text-4xl font-bold">Painel administrativo</h1>
+              </div>
+              <p className="mt-2 max-w-2xl text-white/78">
+                Central de controle da plataforma, com usuários, permissões, banco, IA interna e publicação.
+              </p>
+            </div>
+            <div className="rounded-lg border border-white/16 bg-white/10 p-4 backdrop-blur">
+              <div className="flex items-center gap-3">
+                <Trophy className="h-8 w-8 text-[#F4C430]" />
+                <div>
+                  <p className="text-sm text-white/65">Temporada</p>
+                  <p className="text-xl font-bold">Brasil da escrita</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="mt-2 text-slate-600">Controle usuários, permissões, banco, IA interna e publicação.</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-4">
@@ -68,13 +83,13 @@ export default function DashboardAdmin() {
           ].map((stat) => {
             const Icon = stat.icon;
             return (
-              <Card key={stat.label}>
+              <Card key={stat.label} className="lumi-stat-card rounded-lg">
                 <CardContent className="flex items-center justify-between pt-6">
                   <div>
                     <p className="text-sm text-slate-600">{stat.label}</p>
                     <p className="mt-1 text-3xl font-bold text-slate-950">{stat.value}</p>
                   </div>
-                  <Icon className="h-8 w-8 text-emerald-700" />
+                  <Icon className="h-8 w-8 text-[#123C8C]" />
                 </CardContent>
               </Card>
             );
@@ -116,17 +131,17 @@ export default function DashboardAdmin() {
           ].map((section) => {
             const Icon = section.icon;
             return (
-              <Card key={section.id}>
+              <Card key={section.id} className="lumi-cup-card rounded-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Icon className="h-5 w-5 text-emerald-700" />
+                    <Icon className="h-5 w-5 text-[#123C8C]" />
                     {section.title}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="mb-4 text-sm text-slate-600">{section.description}</p>
                   <Button
-                    className="w-full bg-emerald-700 hover:bg-emerald-800"
+                    className="w-full bg-[#0F3D2E] font-semibold hover:bg-[#174f3d]"
                     onClick={() => setCurrentPage(section.id as AdminPage)}
                   >
                     Acessar
@@ -137,7 +152,7 @@ export default function DashboardAdmin() {
           })}
         </div>
 
-        <Card>
+        <Card className="lumi-cup-card rounded-lg">
           <CardHeader>
             <CardTitle>Resumo de publicação</CardTitle>
           </CardHeader>

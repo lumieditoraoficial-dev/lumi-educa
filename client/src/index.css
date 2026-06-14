@@ -47,6 +47,8 @@
   --lumi-forest: #266B3D;
   --lumi-leaf: #6DB33F;
   --lumi-gold: #F4C430;
+  --lumi-blue: #123C8C;
+  --lumi-sky: #2D9CDB;
   --lumi-paper: #F7F3E9;
   --primary: #0F3D2E;
   --primary-foreground: #F7F3E9;
@@ -58,29 +60,29 @@
   --chart-4: #0F3D2E;
   --chart-5: #F7F3E9;
   --radius: 0.65rem;
-  --background: #fbfaf5;
+  --background: #f8f7eb;
   --foreground: oklch(0.235 0.015 65);
   --card: #ffffff;
   --card-foreground: oklch(0.235 0.015 65);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.235 0.015 65);
-  --secondary: #F7F3E9;
+  --secondary: #fff8d7;
   --secondary-foreground: #0F3D2E;
-  --muted: #f2efe5;
+  --muted: #eef4e3;
   --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: #eef7e8;
+  --accent: #e7f4ff;
   --accent-foreground: #0F3D2E;
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(0.92 0.004 286.32);
   --input: oklch(0.92 0.004 286.32);
-  --ring: #266B3D;
-  --sidebar: #fbfaf5;
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: #eef7e8;
-  --sidebar-accent-foreground: #0F3D2E;
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
+  --ring: #123C8C;
+  --sidebar: #0F3D2E;
+  --sidebar-foreground: #F7F3E9;
+  --sidebar-accent: rgba(244, 196, 48, 0.16);
+  --sidebar-accent-foreground: #F7F3E9;
+  --sidebar-border: rgba(255, 255, 255, 0.12);
+  --sidebar-ring: #F4C430;
 }
 
 .dark {
@@ -124,6 +126,10 @@
   }
   body {
     @apply bg-background text-foreground;
+    background:
+      radial-gradient(circle at 10% 0%, rgba(244, 196, 48, 0.16), transparent 28rem),
+      radial-gradient(circle at 92% 6%, rgba(18, 60, 140, 0.11), transparent 26rem),
+      linear-gradient(180deg, #f8f7eb 0%, #f3f8ee 100%);
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -135,6 +141,95 @@
   input[type="checkbox"]:not(:disabled),
   input[type="radio"]:not(:disabled) {
     @apply cursor-pointer;
+  }
+}
+
+@layer utilities {
+  .lumi-cup-surface {
+    background:
+      linear-gradient(135deg, rgba(15, 61, 46, 0.96), rgba(38, 107, 61, 0.94)),
+      radial-gradient(circle at 85% 12%, rgba(244, 196, 48, 0.32), transparent 22rem),
+      radial-gradient(circle at 12% 18%, rgba(18, 60, 140, 0.28), transparent 18rem);
+  }
+
+  .lumi-field-lines {
+    background-image:
+      linear-gradient(90deg, rgba(255, 255, 255, 0.09) 1px, transparent 1px),
+      linear-gradient(0deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+    background-size: 72px 72px;
+  }
+
+  .lumi-diamond {
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  }
+
+  .lumi-cup-card {
+    border: 1px solid rgba(15, 61, 46, 0.12);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 253, 244, 0.98));
+    box-shadow: 0 18px 45px rgba(15, 61, 46, 0.08);
+  }
+
+  .lumi-stat-card {
+    border: 1px solid rgba(15, 61, 46, 0.11);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 215, 0.86));
+    box-shadow: 0 10px 28px rgba(15, 61, 46, 0.07);
+  }
+
+  .lumi-cup-dashboard {
+    background:
+      radial-gradient(circle at 0% 0%, rgba(244, 196, 48, 0.13), transparent 24rem),
+      radial-gradient(circle at 100% 0%, rgba(18, 60, 140, 0.1), transparent 24rem),
+      linear-gradient(180deg, #fbfaf2 0%, #f0f7eb 100%);
+  }
+
+  .lumi-brazil-panel {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 18% 18%, rgba(244, 196, 48, 0.26), transparent 18rem),
+      radial-gradient(circle at 88% 18%, rgba(18, 60, 140, 0.42), transparent 22rem),
+      linear-gradient(135deg, #0f3d2e 0%, #176338 52%, #0b2f63 100%);
+  }
+
+  .lumi-brazil-panel::before {
+    content: "";
+    position: absolute;
+    inset: auto -5rem -8rem auto;
+    width: 22rem;
+    height: 22rem;
+    border: 2rem solid rgba(244, 196, 48, 0.2);
+    border-radius: 999px;
+  }
+
+  .lumi-brazil-flag {
+    position: relative;
+    border-radius: 0.75rem;
+    background: #159447;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16), 0 18px 35px rgba(0, 0, 0, 0.14);
+  }
+
+  .lumi-brazil-flag::before {
+    content: "";
+    position: absolute;
+    inset: 18% 12%;
+    background: #f4c430;
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  }
+
+  .lumi-brazil-flag::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 34%;
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    background:
+      linear-gradient(12deg, transparent 43%, rgba(255, 255, 255, 0.92) 44%, rgba(255, 255, 255, 0.92) 50%, transparent 51%),
+      #123c8c;
   }
 }
 

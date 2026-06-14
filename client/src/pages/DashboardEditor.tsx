@@ -31,7 +31,7 @@ import { toast } from "sonner";
 const statusLabels: Record<string, string> = {
   draft: "Rascunho",
   submitted: "Enviado",
-  under_review: "Em revisao",
+  under_review: "Em revisão",
   approved: "Aprovado",
   published: "Publicado",
   rejected: "Rejeitado",
@@ -67,13 +67,13 @@ function clamp(value: number, min = 0, max = 10) {
 
 function readCover(file: File, onLoad: (value: string) => void) {
   if (file.size > 2_500_000) {
-    toast.error("Use uma capa com ate 2,5 MB.");
+    toast.error("Use uma capa com até 2,5 MB.");
     return;
   }
 
   const reader = new FileReader();
   reader.onload = () => onLoad(String(reader.result ?? ""));
-  reader.onerror = () => toast.error("Nao foi possivel carregar a capa.");
+  reader.onerror = () => toast.error("Não foi possível carregar a capa.");
   reader.readAsDataURL(file);
 }
 
@@ -174,16 +174,16 @@ export default function DashboardEditor() {
     const score = clamp(4.8 + pagesScore + wordsScore + statusBonus + humanScore);
 
     const reasons = [
-      `${pages} paginas registradas contra meta semanal de ${goals.weeklyPages}.`,
+      `${pages} páginas registradas contra meta semanal de ${goals.weeklyPages}.`,
       `${words} palavras no documento contra meta mensal de ${goals.monthlyWords}.`,
       averageScore === null
-        ? "Ainda nao ha nota humana suficiente; a IA marcou risco pedagogico moderado."
-        : `Media humana atual de ${averageScore.toFixed(1)} foi considerada no calculo.`,
+        ? "Ainda não há nota humana suficiente; a IA marcou risco pedagógico moderado."
+        : `Média humana atual de ${averageScore.toFixed(1)} foi considerada no cálculo.`,
       book.status === "published"
         ? "Livro publicado: fluxo editorial completo."
         : book.status === "approved"
           ? "Livro aprovado: pronto para publicacao e acabamento."
-          : "Livro ainda em revisao: precisa de validacao final antes de publicar.",
+          : "Livro ainda em revisão: precisa de validação final antes de publicar.",
     ];
 
     return { score, reasons };
@@ -248,7 +248,7 @@ export default function DashboardEditor() {
   };
 
   const renderAvatar = (name: string, avatarUrl?: string | null) => (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-emerald-50 text-sm font-semibold text-emerald-800">
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#F4C430]/40 bg-[#fff8d7] text-sm font-bold text-[#0F3D2E] shadow-sm">
       {avatarUrl ? <img src={avatarUrl} alt={name} className="h-full w-full object-cover" /> : name.charAt(0).toUpperCase()}
     </div>
   );
@@ -259,11 +259,29 @@ export default function DashboardEditor() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div>
-          <h1 className="text-4xl font-bold text-slate-950">Painel do Editor</h1>
-          <p className="mt-2 text-slate-600">
-            Revise layout, acompanhe desempenho, receba relatorios mensais e defina metas de producao.
-          </p>
+        <div className="lumi-brazil-panel rounded-xl p-6 text-white shadow-xl">
+          <div className="absolute right-5 top-5 hidden h-28 w-44 rotate-3 opacity-90 md:block lumi-brazil-flag" />
+          <div className="relative z-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+            <div className="max-w-3xl">
+              <Badge className="mb-4 border border-[#F4C430]/35 bg-[#F4C430]/18 px-3 py-1 text-[#F4C430] hover:bg-[#F4C430]/18">
+                Central editorial Brasil
+              </Badge>
+              <h1 className="text-4xl font-bold tracking-normal md:text-5xl">Painel do Editor</h1>
+              <p className="mt-3 max-w-2xl text-base leading-7 text-white/78">
+                Revise layout, acompanhe desempenho, receba relatórios mensais e transforme produções aprovadas em livros prontos para a biblioteca.
+              </p>
+            </div>
+            <div className="grid w-full max-w-md gap-3 sm:grid-cols-2">
+              <div className="rounded-lg border border-white/16 bg-white/10 p-4 backdrop-blur">
+                <p className="text-sm text-white/65">Fila editorial</p>
+                <p className="mt-1 text-3xl font-bold text-white">{editableBooks.length}</p>
+              </div>
+              <div className="rounded-lg border border-[#F4C430]/26 bg-[#F4C430]/16 p-4 backdrop-blur">
+                <p className="text-sm text-[#F4C430]/85">Publicados</p>
+                <p className="mt-1 text-3xl font-bold text-white">{books.filter((book) => book.status === "published").length}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-4">
@@ -271,17 +289,17 @@ export default function DashboardEditor() {
             { label: "Fila editorial", value: editableBooks.length, icon: FileText },
             { label: "Aprovados", value: books.filter((book) => book.status === "approved").length, icon: CheckCircle2 },
             { label: "Publicados", value: books.filter((book) => book.status === "published").length, icon: BookMarked },
-            { label: "Media do mes", value: monthlyReport.averageScore?.toFixed(1) ?? "-", icon: Award },
+            { label: "Média do mês", value: monthlyReport.averageScore?.toFixed(1) ?? "-", icon: Award },
           ].map((item) => {
             const Icon = item.icon;
             return (
-              <Card key={item.label}>
+              <Card key={item.label} className="lumi-stat-card rounded-lg">
                 <CardContent className="flex items-center justify-between pt-6">
                   <div>
                     <p className="text-sm text-slate-600">{item.label}</p>
                     <p className="mt-1 text-3xl font-bold text-slate-950">{item.value}</p>
                   </div>
-                  <Icon className="h-8 w-8 text-emerald-700" />
+                  <Icon className="h-8 w-8 text-[#123C8C]" />
                 </CardContent>
               </Card>
             );
@@ -289,22 +307,22 @@ export default function DashboardEditor() {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-          <Card>
+          <Card className="lumi-cup-card rounded-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <CalendarDays className="h-5 w-5 text-emerald-700" />
-                Relatorio mensal - {monthLabel()}
+                <CalendarDays className="h-5 w-5 text-[#123C8C]" />
+                Relatório mensal - {monthLabel()}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-3 sm:grid-cols-4">
                 {[
                   { label: "Livros movimentados", value: monthlyReport.books },
-                  { label: "Paginas escritas", value: monthlyReport.pages },
+                  { label: "Páginas escritas", value: monthlyReport.pages },
                   { label: "Palavras", value: monthlyReport.words },
                   { label: "Publicados", value: monthlyReport.published },
                 ].map((item) => (
-                  <div key={item.label} className="rounded-lg border bg-slate-50 p-4">
+                  <div key={item.label} className="rounded-lg border border-[#0F3D2E]/10 bg-[#F8F7EB] p-4">
                     <p className="text-sm text-slate-600">{item.label}</p>
                     <p className="mt-1 text-2xl font-bold text-slate-950">{item.value}</p>
                   </div>
@@ -321,16 +339,16 @@ export default function DashboardEditor() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="lumi-cup-card rounded-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-emerald-700" />
+                <Target className="h-5 w-5 text-[#F4C430]" />
                 Metas editoriais
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3">
               <label className="space-y-1.5">
-                <span className="text-sm font-medium text-slate-700">Paginas por semana</span>
+                <span className="text-sm font-medium text-slate-700">Páginas por semana</span>
                 <Input
                   type="number"
                   min={0}
@@ -339,7 +357,7 @@ export default function DashboardEditor() {
                 />
               </label>
               <label className="space-y-1.5">
-                <span className="text-sm font-medium text-slate-700">Palavras por mes</span>
+                <span className="text-sm font-medium text-slate-700">Palavras por mês</span>
                 <Input
                   type="number"
                   min={0}
@@ -348,7 +366,7 @@ export default function DashboardEditor() {
                 />
               </label>
               <label className="space-y-1.5">
-                <span className="text-sm font-medium text-slate-700">Nota minima esperada</span>
+                <span className="text-sm font-medium text-slate-700">Nota mínima esperada</span>
                 <Input
                   type="number"
                   min={0}
@@ -362,10 +380,10 @@ export default function DashboardEditor() {
           </Card>
         </div>
 
-        <Card>
+        <Card className="lumi-cup-card rounded-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-emerald-700" />
+              <Users className="h-5 w-5 text-[#123C8C]" />
               Designar alunos para educadores e turmas
             </CardTitle>
           </CardHeader>
@@ -376,7 +394,7 @@ export default function DashboardEditor() {
               </p>
             ) : (
               students.map((student) => (
-                <div key={student.id} className="grid gap-3 rounded-lg border p-4 lg:grid-cols-[1.2fr_0.9fr_0.9fr_auto] lg:items-center">
+                <div key={student.id} className="grid gap-3 rounded-lg border border-[#0F3D2E]/10 bg-white/72 p-4 transition hover:border-[#F4C430]/60 hover:shadow-sm lg:grid-cols-[1.2fr_0.9fr_0.9fr_auto] lg:items-center">
                   <div className="flex items-center gap-3">
                     {renderAvatar(student.name || "Aluno", student.avatarUrl)}
                     <div>
@@ -429,7 +447,7 @@ export default function DashboardEditor() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="lumi-cup-card rounded-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-amber-600" />
@@ -439,26 +457,26 @@ export default function DashboardEditor() {
           <CardContent className="space-y-3">
             {performance.length === 0 ? (
               <p className="rounded-lg border border-dashed p-8 text-center text-slate-600">
-                Ainda nao ha alunos com producao suficiente para ranking.
+                Ainda não há alunos com produção suficiente para ranking.
               </p>
             ) : (
               performance.slice(0, 8).map((student, index) => (
-                <div key={student.id} className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-center md:justify-between">
+                <div key={student.id} className="flex flex-col gap-3 rounded-lg border border-[#0F3D2E]/10 bg-white/72 p-4 transition hover:border-[#123C8C]/35 hover:shadow-sm md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-800">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F4C430] text-sm font-bold text-[#0F3D2E] shadow-sm">
                       {index + 1}
                     </div>
                     {renderAvatar(student.name, student.avatarUrl)}
                     <div>
                       <p className="font-semibold text-slate-950">{student.name}</p>
                       <p className="text-sm text-slate-600">
-                        {student.books} livros, {student.pageCount} paginas, {student.wordCount} palavras
+                        {student.books} livros, {student.pageCount} páginas, {student.wordCount} palavras
                       </p>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Badge variant="secondary">{student.goalsHit}/3 metas batidas</Badge>
-                    <Badge variant="outline">Media {student.averageScore?.toFixed(1) ?? "-"}</Badge>
+                    <Badge variant="outline">Média {student.averageScore?.toFixed(1) ?? "-"}</Badge>
                     <Badge variant="outline">{student.published} publicados</Badge>
                     <Button variant="outline" size="sm" asChild>
                       <a href={`/api/reports/student/${student.id}.pdf`}>
@@ -474,9 +492,9 @@ export default function DashboardEditor() {
         </Card>
 
         <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
-          <Card>
+          <Card className="lumi-cup-card rounded-lg">
             <CardHeader>
-              <CardTitle>Livros para preparacao editorial</CardTitle>
+              <CardTitle>Livros para preparação editorial</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {isLoading ? (
@@ -496,19 +514,21 @@ export default function DashboardEditor() {
                   return (
                     <div
                       key={book.id}
-                      className={`rounded-lg border p-4 ${selectedBook?.id === book.id ? "border-emerald-500 bg-emerald-50/50" : ""}`}
+                      className={`rounded-lg border p-4 transition hover:shadow-sm ${
+                        selectedBook?.id === book.id ? "border-[#F4C430] bg-[#fff8d7]" : "border-[#0F3D2E]/10 bg-white/78 hover:border-[#123C8C]/35"
+                      }`}
                     >
                       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
                         <div>
                           <div className="flex flex-wrap items-center gap-3">
                             <h3 className="font-semibold text-slate-950">{book.title}</h3>
                             <Badge variant="secondary">{statusLabels[book.status] ?? book.status}</Badge>
-                            <Badge variant="outline">IA {insight.score.toFixed(1)}</Badge>
+                            <Badge className="bg-[#123C8C] text-white hover:bg-[#123C8C]">IA {insight.score.toFixed(1)}</Badge>
                           </div>
-                          <p className="mt-1 text-sm text-slate-600">{book.description || "Sem descricao cadastrada."}</p>
+                          <p className="mt-1 text-sm text-slate-600">{book.description || "Sem descrição cadastrada."}</p>
                           <p className="mt-2 text-sm text-slate-600">
                             Autor: {getStudentName(book.authorId)} | Nota humana: {averageScore?.toFixed(1) ?? "-"} |{" "}
-                            {numberValue(book.pageCount)} paginas
+                            {numberValue(book.pageCount)} páginas
                           </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -545,7 +565,7 @@ export default function DashboardEditor() {
                           </label>
                           {book.status === "approved" ? (
                             <Button
-                              className="bg-emerald-700 hover:bg-emerald-800"
+                              className="bg-[#F4C430] font-semibold text-[#0F3D2E] hover:bg-[#ffdc3b]"
                               disabled={publishMutation.isPending}
                               onClick={() => publishMutation.mutate({ bookId: book.id })}
                             >
@@ -574,10 +594,10 @@ export default function DashboardEditor() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="lumi-cup-card rounded-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-emerald-700" />
+                <Sparkles className="h-5 w-5 text-[#123C8C]" />
                 Revisor de layout e IA interna
               </CardTitle>
             </CardHeader>
@@ -589,7 +609,7 @@ export default function DashboardEditor() {
                 </div>
               ) : (
                 <div className="space-y-5">
-                  <div className="rounded-lg border bg-slate-50 p-4">
+                  <div className="rounded-lg border border-[#0F3D2E]/10 bg-[#F8F7EB] p-4">
                     <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                       <div className="flex gap-4">
                         {selectedBook.coverImageUrl ? (
@@ -612,19 +632,19 @@ export default function DashboardEditor() {
                       </div>
                       <div className="rounded-lg bg-white p-4 text-center shadow-sm">
                         <p className="text-sm text-slate-600">Nota IA</p>
-                        <p className="text-3xl font-bold text-emerald-700">{selectedInsight.score.toFixed(1)}</p>
+                        <p className="text-3xl font-bold text-[#123C8C]">{selectedInsight.score.toFixed(1)}</p>
                       </div>
                     </div>
                   </div>
 
                   <div>
                     <h4 className="mb-2 flex items-center gap-2 font-semibold text-slate-950">
-                      <BarChart3 className="h-4 w-4 text-emerald-700" />
+                      <BarChart3 className="h-4 w-4 text-[#123C8C]" />
                       Por que a IA deu essa nota
                     </h4>
                     <div className="space-y-2">
                       {selectedInsight.reasons.map((reason) => (
-                        <div key={reason} className="rounded-lg border p-3 text-sm text-slate-700">
+                        <div key={reason} className="rounded-lg border border-[#0F3D2E]/10 bg-white/72 p-3 text-sm leading-6 text-slate-700">
                           {reason}
                         </div>
                       ))}
@@ -639,13 +659,13 @@ export default function DashboardEditor() {
                         { label: "Descricao preenchida", ok: Boolean(selectedBook.description) },
                         { label: "Categoria informada", ok: Boolean(selectedBook.category) },
                         { label: "Capa cadastrada", ok: Boolean(selectedBook.coverImageUrl) },
-                        { label: "Paginas suficientes", ok: numberValue(selectedBook.pageCount) >= goals.weeklyPages },
+                        { label: "Páginas suficientes", ok: numberValue(selectedBook.pageCount) >= goals.weeklyPages },
                         { label: "Nota dentro da meta", ok: (selectedAverageScore ?? selectedInsight.score) >= goals.minimumScore },
                       ].map((item) => (
                         <div
                           key={item.label}
                           className={`rounded-lg border p-3 text-sm ${
-                            item.ok ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-amber-200 bg-amber-50 text-amber-900"
+                            item.ok ? "border-[#266B3D]/25 bg-[#eef7e8] text-[#0F3D2E]" : "border-[#F4C430]/45 bg-[#fff8d7] text-[#6B5400]"
                           }`}
                         >
                           {item.ok ? "OK" : "Ajustar"} - {item.label}
@@ -655,13 +675,13 @@ export default function DashboardEditor() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Button asChild className="bg-emerald-700 hover:bg-emerald-800">
+                    <Button asChild className="bg-[#0F3D2E] font-semibold hover:bg-[#174f3d]">
                       <a href={selectedBook.status === "published" ? `/library/book/${selectedBook.id}` : `/books/${selectedBook.id}/pages`}>
                         Abrir documento
                       </a>
                     </Button>
                     <Button variant="outline" asChild>
-                      <a href={`/books/${selectedBook.id}/pages`}>Ver paginas do livro</a>
+                      <a href={`/books/${selectedBook.id}/pages`}>Ver páginas do livro</a>
                     </Button>
                     <Button variant="outline" asChild>
                       <a href={`/api/books/${selectedBook.id}/pdf`}>
@@ -688,7 +708,7 @@ export default function DashboardEditor() {
                     </label>
                     {selectedBook.status === "approved" ? (
                       <Button
-                        className="bg-emerald-700 hover:bg-emerald-800"
+                        className="bg-[#F4C430] font-semibold text-[#0F3D2E] hover:bg-[#ffdc3b]"
                         disabled={publishMutation.isPending}
                         onClick={() => publishMutation.mutate({ bookId: selectedBook.id })}
                       >
