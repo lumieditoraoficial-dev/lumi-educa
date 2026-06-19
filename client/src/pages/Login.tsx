@@ -1,10 +1,9 @@
 import BrandLogo from "@/components/BrandLogo";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
-import { BookOpen, GraduationCap, Lock, Mail, ShieldCheck, Trophy, UserCog, Users } from "lucide-react";
+import { BookOpen, GraduationCap, Lock, Mail, ShieldCheck, UserCog, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -82,11 +81,6 @@ export default function Login() {
     <div className="min-h-screen bg-[#F8F7EB] text-[#0F3D2E]">
       <div className="grid min-h-screen lg:grid-cols-[1fr_0.95fr]">
         <section className="relative overflow-hidden px-6 py-8 sm:px-10 lg:px-12">
-          <div className="absolute left-0 top-0 h-56 w-72 bg-[#123C8C]" style={{ clipPath: "polygon(0 0, 100% 0, 34% 100%, 0 54%)" }} />
-          <div className="absolute left-0 top-0 h-40 w-56 bg-[#266B3D]" style={{ clipPath: "polygon(0 0, 78% 0, 44% 100%, 0 35%)" }} />
-          <div className="absolute left-36 top-0 h-32 w-44 bg-[#F4C430]" style={{ clipPath: "polygon(0 0, 100% 0, 0 100%)" }} />
-          <div className="absolute bottom-10 right-10 h-28 w-28 rounded-full border-[12px] border-[#123C8C]/10" />
-
           <div className="relative flex min-h-full flex-col justify-between">
             <button
               type="button"
@@ -97,53 +91,26 @@ export default function Login() {
             </button>
 
             <div className="max-w-2xl py-14 lg:py-20">
-              <Badge className="mb-5 bg-[#F4C430] text-[#0F3D2E] hover:bg-[#F4C430]">
-                Temporada Brasil da escrita
-              </Badge>
               <h1 className="text-4xl font-semibold leading-tight tracking-normal sm:text-5xl lg:text-6xl">
-                Entre em campo para escrever.
+                Lumi Educa
               </h1>
-              <p className="mt-5 min-h-[4.5rem] max-w-xl text-lg leading-8 text-[#0F3D2E]/72 transition-opacity">
+              <p className="mt-5 min-h-[3.5rem] max-w-xl text-lg leading-8 text-[#0F3D2E]/72 transition-opacity">
                 {motivationalQuotes[quoteIndex]}
               </p>
-              <div className="mt-8 grid max-w-xl gap-3 sm:grid-cols-3">
-                {[
-                  ["Aluno", "escreve"],
-                  ["Professor", "orienta"],
-                  ["Editor", "publica"],
-                ].map(([title, label]) => (
-                  <div key={title} className="rounded-lg border border-[#0F3D2E]/10 bg-white/75 p-4 shadow-sm">
-                    <p className="text-lg font-bold text-[#0F3D2E]">{title}</p>
-                    <p className="mt-1 text-sm text-[#0F3D2E]/60">{label}</p>
-                  </div>
-                ))}
-              </div>
             </div>
-
-            <p className="text-sm text-[#0F3D2E]/65">Acesso seguro para escola, equipe pedagogica e publicacao estudantil.</p>
           </div>
         </section>
 
-        <section className="lumi-cup-surface lumi-field-lines relative flex items-center justify-center overflow-hidden px-4 py-10 sm:px-8">
-          <div className="absolute bottom-0 right-0 h-64 w-80 bg-[#266B3D]" style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%, 42% 44%)" }} />
-          <div className="absolute bottom-0 right-0 h-48 w-64 bg-[#F4C430]" style={{ clipPath: "polygon(100% 0, 100% 100%, 28% 100%, 0 48%)" }} />
-          <div className="absolute bottom-0 right-36 h-32 w-44 bg-[#123C8C]" style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }} />
-
+        <section className="relative flex items-center justify-center overflow-hidden bg-[#0F3D2E] px-4 py-10 sm:px-8">
           <Card className="relative z-10 w-full max-w-xl rounded-lg border border-white/20 bg-white shadow-2xl">
             <CardHeader className="space-y-4">
               <div className="flex items-start justify-between gap-4">
                 <BrandLogo compact />
-                <div className="flex h-11 w-11 items-center justify-center rounded-md bg-[#F4C430] text-[#0F3D2E]">
-                  <Trophy className="h-5 w-5" />
-                </div>
               </div>
               <div>
                 <CardTitle className="text-2xl text-[#0F3D2E]">
                   {loginMode === "master" ? "Acesso interno" : "Entrar na plataforma"}
                 </CardTitle>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Acesso seguro para continuar a jornada de escrita, avaliacao e publicacao.
-                </p>
               </div>
             </CardHeader>
 

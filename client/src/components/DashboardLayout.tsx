@@ -286,8 +286,8 @@ function DashboardLayoutContent({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-3 rounded-lg px-1 py-1 text-[#F7F3E9] transition-colors w-full text-left hover:bg-white/10 group-data-[collapsible=icon]:justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430]">
-                  <Avatar className="h-9 w-9 border border-[#F4C430]/35 shrink-0">
-                    <AvatarImage src={user?.avatarUrl ?? undefined} alt={user?.name ?? "Usuario"} />
+                  <Avatar className="h-9 w-9 shrink-0 border border-[#F4C430]/35">
+                    <AvatarImage src={user?.avatarUrl ?? undefined} alt={user?.name ?? "Usuario"} className="object-cover" />
                     <AvatarFallback className="bg-[#F4C430] text-xs font-bold text-[#0F3D2E]">
                       {user?.name?.charAt(0).toUpperCase()}
                     </AvatarFallback>
@@ -358,7 +358,9 @@ function DashboardLayoutContent({
             </div>
           </div>
         )}
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="flex-1 p-4 md:p-6">
+          <div className="mx-auto w-full max-w-[1440px]">{children}</div>
+        </main>
       </SidebarInset>
     </>
   );

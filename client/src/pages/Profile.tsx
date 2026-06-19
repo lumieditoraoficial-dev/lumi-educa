@@ -68,7 +68,7 @@ export default function Profile() {
           <CardContent className="space-y-5">
             <div className="flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center">
               <Avatar className="h-20 w-20 border">
-                <AvatarImage src={avatarUrl || undefined} alt={name || "Usuario"} />
+                <AvatarImage src={avatarUrl || undefined} alt={name || "Usuario"} className="object-cover" />
                 <AvatarFallback>{name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
               </Avatar>
               <div className="flex flex-wrap gap-2">

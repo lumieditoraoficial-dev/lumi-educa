@@ -70,7 +70,6 @@ export default function Signup() {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0F3D2E] p-4">
       <div className="absolute left-0 top-0 h-56 w-72 bg-[#266B3D]" style={{ clipPath: "polygon(0 0, 100% 0, 36% 100%, 0 58%)" }} />
@@ -97,7 +96,7 @@ export default function Signup() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="flex items-center gap-4 rounded-lg border border-[#0F3D2E]/10 bg-[#F7F3E9] p-3">
                 <Avatar className="h-14 w-14 border bg-white">
-                  <AvatarImage src={avatarUrl || undefined} alt={name || "Usuario"} />
+                  <AvatarImage src={avatarUrl || undefined} alt={name || "Usuario"} className="object-cover" />
                   <AvatarFallback>{name.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                 </Avatar>
                 <label className="flex cursor-pointer items-center gap-2 rounded-md border border-[#0F3D2E]/15 bg-white px-3 py-2 text-sm font-medium text-[#0F3D2E] hover:bg-[#eef7e8]">

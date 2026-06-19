@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
-import { AlertCircle, BookOpen, CheckCircle, Clock, MessageSquareText, Plus, TrendingUp } from "lucide-react";
+import { AlertCircle, BookOpen, CheckCircle, Clock, MessageSquareText, Plus, Sparkles, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -15,7 +15,7 @@ import { useLocation } from "wouter";
 const statusConfig: Record<string, { label: string; variant: any; icon: any }> = {
   draft: { label: "Rascunho", variant: "secondary", icon: Clock },
   submitted: { label: "Enviado", variant: "default", icon: Clock },
-  under_review: { label: "Em revisao", variant: "outline", icon: AlertCircle },
+  under_review: { label: "Em revisão", variant: "outline", icon: AlertCircle },
   approved: { label: "Aprovado", variant: "default", icon: CheckCircle },
   published: { label: "Publicado", variant: "default", icon: CheckCircle },
   rejected: { label: "Rejeitado", variant: "destructive", icon: AlertCircle },
@@ -50,7 +50,6 @@ export default function DashboardStudent() {
   const { data: evaluations = [] } = trpc.evaluations.myEvaluations.useQuery(undefined, {
     enabled: Boolean(user?.role === "student"),
   });
-
   const validScores = evaluations.map((evaluation) => Number(evaluation.score)).filter((score) => Number.isFinite(score) && score > 0);
   const averageScore =
     validScores.length === 0 ? null : validScores.reduce((sum, score) => sum + score, 0) / validScores.length;
@@ -64,7 +63,7 @@ export default function DashboardStudent() {
 
   const createBookMutation = trpc.books.createBook.useMutation({
     onSuccess: async (book: any) => {
-      toast.success("Livro criado. Agora crie a primeira pagina para escrever.");
+      toast.success("Livro criado. Agora voce pode continuar escrevendo.");
       setNewBookTitle("");
       setNewBookDescription("");
       setIsCreatingBook(false);
@@ -83,14 +82,39 @@ export default function DashboardStudent() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-          <div>
-            <h1 className="text-4xl font-bold text-slate-950">Meus livros</h1>
-            <p className="mt-2 text-slate-600">Crie livros, organize paginas e acompanhe a revisao pedagogica.</p>
+        <div className="lumi-brazil-panel rounded-2xl p-6 text-white shadow-xl md:p-8">
+          <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_18rem] md:items-center">
+            <div>
+              <Badge className="bg-white/15 text-white hover:bg-white/20">Autoria jovem</Badge>
+              <h1 className="mt-4 text-4xl font-black tracking-tight md:text-5xl">Meus livros</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-white/82">
+                Escreva historias, acompanhe feedbacks e transforme suas ideias em um livro com cara de publicacao.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold text-white/85">
+                <span className="rounded-full bg-white/12 px-3 py-1">Quebra de pagina</span>
+                <span className="rounded-full bg-white/12 px-3 py-1">Imagens no texto</span>
+                <span className="rounded-full bg-white/12 px-3 py-1">Envio de paginas novas</span>
+              </div>
+            </div>
+            <div className="rounded-xl border border-white/15 bg-white/10 p-4 backdrop-blur">
+              <div className="flex items-center gap-3">
+                <div className="rounded-xl bg-yellow-300 p-3 text-emerald-950">
+                  <Sparkles className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-sm text-white/70">Proximo passo</p>
+                  <p className="font-bold">Continuar escrevendo</p>
+                </div>
+              </div>
+              <p className="mt-4 text-sm leading-6 text-white/75">O aluno escreve no mesmo documento e a proxima pagina aparece automaticamente.</p>
+            </div>
           </div>
+        </div>
+
+        <div className="flex justify-end">
           <Dialog open={isCreatingBook} onOpenChange={setIsCreatingBook}>
             <DialogTrigger asChild>
-              <Button className="bg-emerald-700 hover:bg-emerald-800">
+              <Button className="bg-emerald-800 hover:bg-emerald-900">
                 <Plus className="mr-2 h-4 w-4" />
                 Novo livro
               </Button>
@@ -101,15 +125,15 @@ export default function DashboardStudent() {
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium">Titulo do livro</label>
+                  <label className="mb-2 block text-sm font-medium">Título do livro</label>
                   <Input
-                    placeholder="Ex: Minha aventura magica"
+                    placeholder="Ex: Minha aventura mágica"
                     value={newBookTitle}
                     onChange={(event) => setNewBookTitle(event.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium">Descricao</label>
+                  <label className="mb-2 block text-sm font-medium">Descrição</label>
                   <Textarea
                     placeholder="Descreva a ideia do livro..."
                     value={newBookDescription}
@@ -122,7 +146,7 @@ export default function DashboardStudent() {
                   disabled={createBookMutation.isPending}
                   onClick={() => {
                     if (!newBookTitle.trim()) {
-                      toast.error("Digite um titulo para o livro.");
+                      toast.error("Digite um título para o livro.");
                       return;
                     }
                     createBookMutation.mutate({
@@ -142,12 +166,12 @@ export default function DashboardStudent() {
           {[
             { label: "Total de livros", value: books.length, icon: BookOpen },
             { label: "Rascunhos", value: books.filter((book) => book.status === "draft").length, icon: Clock },
-            { label: "Em revisao", value: books.filter((book) => ["submitted", "under_review"].includes(book.status)).length, icon: AlertCircle },
-            { label: "Media de notas", value: averageScore?.toFixed(1) ?? "-", icon: TrendingUp },
+            { label: "Em revisão", value: books.filter((book) => ["submitted", "under_review"].includes(book.status)).length, icon: AlertCircle },
+            { label: "Média de notas", value: averageScore?.toFixed(1) ?? "-", icon: TrendingUp },
           ].map((stat) => {
             const Icon = stat.icon;
             return (
-              <Card key={stat.label}>
+              <Card key={stat.label} className="lumi-stat-card">
                 <CardContent className="flex items-center justify-between pt-6">
                   <div>
                     <p className="text-sm text-slate-600">{stat.label}</p>
@@ -161,11 +185,11 @@ export default function DashboardStudent() {
         </div>
 
         {evaluations.length > 0 && (
-          <Card>
+          <Card className="lumi-cup-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquareText className="h-5 w-5 text-emerald-700" />
-                Notas e orientacoes recebidas
+                Notas e orientações recebidas
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-2">
@@ -197,7 +221,7 @@ export default function DashboardStudent() {
             <Card>
               <CardContent className="pt-8 text-center">
                 <BookOpen className="mx-auto mb-4 h-12 w-12 text-slate-300" />
-                <p className="mb-4 text-slate-600">Voce ainda nao criou nenhum livro.</p>
+                <p className="mb-4 text-slate-600">Você ainda não criou nenhum livro.</p>
                 <Button className="bg-emerald-700 hover:bg-emerald-800" onClick={() => setIsCreatingBook(true)}>
                   <Plus className="mr-2 h-4 w-4" />
                   Criar primeiro livro
@@ -209,7 +233,7 @@ export default function DashboardStudent() {
               {books.map((book) => {
                 const latestEvaluation = latestEvaluationByBook.get(book.id);
                 return (
-                  <Card key={book.id} className="transition-shadow hover:shadow-md">
+                  <Card key={book.id} className="lumi-cup-card overflow-hidden transition hover:-translate-y-0.5 hover:shadow-xl">
                     <CardHeader>
                       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
                         <div>
@@ -222,15 +246,15 @@ export default function DashboardStudent() {
                     <CardContent>
                       {latestEvaluation ? (
                         <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-950">
-                          <p className="font-semibold">Ultimo feedback</p>
+                          <p className="font-semibold">Último feedback</p>
                           <p className="mt-1">
-                            Nota {scoreLabel(latestEvaluation.score)} - {latestEvaluation.feedback || "Sem comentario escrito."}
+                            Nota {scoreLabel(latestEvaluation.score)} - {latestEvaluation.feedback || "Sem comentário escrito."}
                           </p>
                         </div>
                       ) : null}
                       <div className="mb-4 grid gap-4 sm:grid-cols-3">
                         <div>
-                          <p className="text-sm text-slate-600">Paginas</p>
+                          <p className="text-sm text-slate-600">Folhas</p>
                           <p className="font-semibold text-slate-950">{book.pageCount ?? 0}</p>
                         </div>
                         <div>
@@ -242,8 +266,8 @@ export default function DashboardStudent() {
                           <p className="font-semibold text-slate-950">{new Date(book.createdAt).toLocaleDateString("pt-BR")}</p>
                         </div>
                       </div>
-                      <Button className="bg-emerald-700 hover:bg-emerald-800" onClick={() => navigate(`/books/${book.id}/pages`)}>
-                        Escrever livro
+                      <Button className="bg-emerald-800 hover:bg-emerald-900" onClick={() => navigate(`/books/${book.id}/pages`)}>
+                        Continuar escrevendo
                       </Button>
                     </CardContent>
                   </Card>

@@ -98,7 +98,7 @@ export default function Messages() {
                     }`}
                   >
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={contact.avatarUrl ?? undefined} alt={contact.name ?? "Usuario"} />
+                      <AvatarImage src={contact.avatarUrl ?? undefined} alt={contact.name ?? "Usuario"} className="object-cover" />
                       <AvatarFallback>{contact.name?.charAt(0).toUpperCase() ?? "U"}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
@@ -119,7 +119,7 @@ export default function Messages() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-11 w-11">
-                      <AvatarImage src={selectedContact.avatarUrl ?? undefined} alt={selectedContact.name ?? "Usuario"} />
+                      <AvatarImage src={selectedContact.avatarUrl ?? undefined} alt={selectedContact.name ?? "Usuario"} className="object-cover" />
                       <AvatarFallback>{selectedContact.name?.charAt(0).toUpperCase() ?? "U"}</AvatarFallback>
                     </Avatar>
                     <div>

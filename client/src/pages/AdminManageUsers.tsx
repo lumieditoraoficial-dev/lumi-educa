@@ -43,7 +43,7 @@ const blankUser = {
 function AvatarPreview({ name, avatarUrl }: { name?: string | null; avatarUrl?: string | null }) {
   return (
     <Avatar className="h-12 w-12 border">
-      <AvatarImage src={avatarUrl ?? undefined} alt={name ?? "Usuario"} />
+      <AvatarImage src={avatarUrl ?? undefined} alt={name ?? "Usuario"} className="object-cover" />
       <AvatarFallback>{name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
     </Avatar>
   );

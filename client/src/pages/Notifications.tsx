@@ -76,7 +76,7 @@ export default function Notifications() {
           </Button>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardContent className="flex items-center justify-between pt-6">
               <div>
@@ -93,6 +93,21 @@ export default function Notifications() {
                 Quando o usuario entra na plataforma, o acesso do dia fica registrado automaticamente. Sabado e domingo
                 nao contam como obrigatorios.
               </p>
+            </CardContent>
+          </Card>
+          <Card className="overflow-hidden border-emerald-900/10 bg-[#0F3D2E] text-white">
+            <CardContent className="relative min-h-36 pt-6">
+              <div className="relative z-10 max-w-[10rem]">
+                <p className="text-sm font-semibold text-[#F4C430]">Avisos Lumi</p>
+                <p className="mt-2 text-sm leading-6 text-white/76">
+                  Fique de olho nas mensagens da equipe.
+                </p>
+              </div>
+              <img
+                src="/mascots/lumi-mascot-educator-transparent.png"
+                alt=""
+                className="absolute bottom-0 right-0 h-32 w-32 object-contain"
+              />
             </CardContent>
           </Card>
         </div>
