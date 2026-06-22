@@ -50,7 +50,7 @@ async function assertStaffCanHandleBook(book: { authorId: number }, viewer: any)
     throw new TRPCError({ code: "FORBIDDEN" });
   }
 
-  if (viewer.role === "educator" && viewer.id > 0 && author.assignedEducatorId !== viewer.id && author.assignedEducatorId != null) {
+  if (viewer.role === "educator" && viewer.id > 0 && author.assignedEducatorId !== viewer.id) {
     throw new TRPCError({ code: "FORBIDDEN" });
   }
 }

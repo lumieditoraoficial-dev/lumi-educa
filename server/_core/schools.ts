@@ -9,7 +9,7 @@ export function normalizeSchoolId(value: unknown): SchoolId {
 }
 
 export function canSeeAllSchools(user: { id?: number | null; role?: string | null }) {
-  return (user.id ?? 0) < 0 || user.role === "admin" || user.role === "editor";
+  return user.role === "admin" || user.role === "editor";
 }
 
 export function sameSchool(

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { buildClassInsights, buildStudentInsights, formatLastAccess, formatScore, isWeekend, toDate } from "@/lib/insights";
-import { ALL_SCHOOLS, SCHOOL_OPTIONS, type SchoolFilter, matchesSchool } from "@/lib/schools";
+import { ALL_SCHOOLS, SCHOOL_OPTIONS, type SchoolFilter, getSchoolLabel, matchesSchool, normalizeSchoolId } from "@/lib/schools";
 import { trpc } from "@/lib/trpc";
 import { Activity, AlertTriangle, BarChart3, BookOpen, CheckCircle, Eye, TrendingUp, Users, Wifi, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -32,20 +32,28 @@ export default function DashboardCoordinator() {
   const { data: rawBooks = [], isLoading } = trpc.books.listBooks.useQuery(undefined, { refetchInterval: 30_000 });
   const { data: rawStudents = [] } = trpc.users.listStudents.useQuery(undefined, { refetchInterval: 15_000 });
   const { data: rawEvaluations = [] } = trpc.evaluations.listEvaluations.useQuery(undefined, { refetchInterval: 30_000 });
+  const { data: profile } = trpc.users.getProfile.useQuery();
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(new Date()), 15_000);
     return () => window.clearInterval(interval);
   }, []);
 
+  const canChooseSchools = profile?.role === "admin" || profile?.role === "editor";
+  const ownSchoolFilter = String(normalizeSchoolId(profile?.schoolId)) as SchoolFilter;
+  const effectiveSchoolFilter = canChooseSchools ? schoolFilter : ownSchoolFilter;
+  const availableSchoolOptions = canChooseSchools
+    ? SCHOOL_OPTIONS
+    : SCHOOL_OPTIONS.filter((school) => school.id === normalizeSchoolId(profile?.schoolId));
+
   const students = useMemo(
-    () => rawStudents.filter((student) => matchesSchool(student.schoolId, schoolFilter)),
-    [rawStudents, schoolFilter]
+    () => rawStudents.filter((student) => matchesSchool(student.schoolId, effectiveSchoolFilter)),
+    [rawStudents, effectiveSchoolFilter]
   );
   const studentById = useMemo(() => new Map(rawStudents.map((student) => [student.id, student])), [rawStudents]);
   const books = useMemo(
-    () => rawBooks.filter((book) => matchesSchool(studentById.get(book.authorId)?.schoolId, schoolFilter)),
-    [rawBooks, studentById, schoolFilter]
+    () => rawBooks.filter((book) => matchesSchool(studentById.get(book.authorId)?.schoolId, effectiveSchoolFilter)),
+    [rawBooks, studentById, effectiveSchoolFilter]
   );
   const bookIds = useMemo(() => new Set(books.map((book) => book.id)), [books]);
   const evaluations = useMemo(
@@ -81,6 +89,35 @@ export default function DashboardCoordinator() {
   }).length;
   const weeklyGrowth =
     booksPreviousWeek === 0 ? booksThisWeek : Math.round(((booksThisWeek - booksPreviousWeek) / booksPreviousWeek) * 100);
+  const accessRate = students.length ? Math.round((accessedToday.length / students.length) * 100) : 0;
+  const publishRate = books.length ? Math.round((published.length / books.length) * 100) : 0;
+  const averagePagesPerStudent = students.length
+    ? Math.round(studentInsights.reduce((sum, item) => sum + item.totalPages, 0) / students.length)
+    : 0;
+  const writingStudents = studentInsights.filter((item) => item.totalWords > 0).length;
+  const inactiveStudents = studentInsights.filter((item) => !item.lastActivity).length;
+  const studentPerformance = studentInsights
+    .map((item) => {
+      const scorePart = item.avgScore ?? 5;
+      const writingPart = Math.min(2, item.totalPages / 4) + Math.min(2, item.totalWords / 1200);
+      const accessPart = item.accessedToday ? 1.5 : item.online ? 1 : 0;
+      const publishedPart = Math.min(1.5, item.publishedBooks * 0.75);
+      const performanceScore = Math.min(10, Math.max(0, scorePart * 0.5 + writingPart + accessPart + publishedPart));
+      const status =
+        item.needsAttention ? "Precisa acompanhamento" : performanceScore >= 8 ? "Destaque" : performanceScore >= 6 ? "Em progresso" : "Observar";
+
+      return {
+        ...item,
+        performanceScore,
+        status,
+      };
+    })
+    .sort((a, b) => b.performanceScore - a.performanceScore);
+  const topStudents = studentPerformance.slice(0, 5);
+  const studentsToSupport = studentPerformance
+    .filter((item) => item.needsAttention || item.performanceScore < 6)
+    .sort((a, b) => a.performanceScore - b.performanceScore)
+    .slice(0, 5);
 
   const approveMutation = trpc.publications.approveForPublication.useMutation({
     onSuccess: async () => {
@@ -121,13 +158,19 @@ export default function DashboardCoordinator() {
             Monitore turmas, acesso diario, desempenho pedagogico e fluxo de aprovacao das obras.
           </p>
           <div className="mt-4 w-full max-w-xs">
-            <Select value={schoolFilter} onValueChange={(value: SchoolFilter) => setSchoolFilter(value)}>
+            <Select
+              value={effectiveSchoolFilter}
+              onValueChange={(value: SchoolFilter) => {
+                if (canChooseSchools) setSchoolFilter(value);
+              }}
+              disabled={!canChooseSchools}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL_SCHOOLS}>Todas as escolas</SelectItem>
-                {SCHOOL_OPTIONS.map((school) => (
+                {canChooseSchools ? <SelectItem value={ALL_SCHOOLS}>Todas as escolas</SelectItem> : null}
+                {availableSchoolOptions.map((school) => (
                   <SelectItem key={school.id} value={String(school.id)}>
                     {school.label}
                   </SelectItem>
@@ -135,6 +178,117 @@ export default function DashboardCoordinator() {
               </SelectContent>
             </Select>
           </div>
+        </div>
+
+        <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+          <Card>
+            <CardHeader>
+              <CardTitle>Desempenho escolar - {effectiveSchoolFilter === ALL_SCHOOLS ? "rede completa" : getSchoolLabel(effectiveSchoolFilter)}</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3 sm:grid-cols-2">
+              {[
+                { label: "Acesso hoje", value: `${accessRate}%`, detail: `${accessedToday.length}/${students.length} alunos` },
+                { label: "Alunos produzindo", value: writingStudents, detail: "com texto iniciado" },
+                { label: "Paginas por aluno", value: averagePagesPerStudent, detail: "media da escola" },
+                { label: "Taxa de publicacao", value: `${publishRate}%`, detail: `${published.length}/${books.length} livros` },
+                { label: "Sem primeiro acesso", value: inactiveStudents, detail: "precisam ser chamados" },
+                { label: "Notas registradas", value: scoredStudents.length, detail: "alunos com avaliacao" },
+              ].map((item) => (
+                <div key={item.label} className="rounded-lg border bg-slate-50 p-4">
+                  <p className="text-sm text-slate-600">{item.label}</p>
+                  <p className="mt-1 text-2xl font-bold text-slate-950">{item.value}</p>
+                  <p className="mt-1 text-xs text-slate-500">{item.detail}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Mapa de desempenho dos alunos</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {studentPerformance.length === 0 ? (
+                <p className="rounded-lg border border-dashed p-8 text-center text-slate-600">
+                  Nenhum aluno para medir nesta escola.
+                </p>
+              ) : (
+                studentPerformance.slice(0, 8).map((item) => (
+                  <div key={item.student.id} className="rounded-lg border p-4">
+                    <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+                      <div>
+                        <p className="font-semibold text-slate-950">{item.student.name}</p>
+                        <p className="text-sm text-slate-600">
+                          {item.student.className || "Sem turma"} - {item.totalBooks} livros - {item.totalPages} paginas -{" "}
+                          {item.totalWords} palavras
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="outline">Indice {item.performanceScore.toFixed(1)}</Badge>
+                        <Badge variant="outline">Nota {formatScore(item.avgScore)}</Badge>
+                        <Badge className={item.needsAttention ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}>
+                          {item.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Destaques da escola</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {topStudents.length === 0 ? (
+                <p className="rounded-lg border border-dashed p-6 text-center text-sm text-slate-600">Sem dados ainda.</p>
+              ) : (
+                topStudents.map((item, index) => (
+                  <div key={item.student.id} className="flex items-center justify-between rounded-lg border p-3">
+                    <div>
+                      <p className="font-medium text-slate-950">
+                        {index + 1}. {item.student.name}
+                      </p>
+                      <p className="text-sm text-slate-600">
+                        {item.totalPages} paginas, nota {formatScore(item.avgScore)}, {item.publishedBooks} publicados
+                      </p>
+                    </div>
+                    <Badge className="bg-emerald-100 text-emerald-800">{item.performanceScore.toFixed(1)}</Badge>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Plano de acompanhamento</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {studentsToSupport.length === 0 ? (
+                <p className="rounded-lg border border-emerald-100 bg-emerald-50 p-6 text-sm text-emerald-800">
+                  Nenhum aluno em acompanhamento prioritario agora.
+                </p>
+              ) : (
+                studentsToSupport.map((item) => (
+                  <div key={item.student.id} className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-medium text-slate-950">{item.student.name}</p>
+                      <Badge className="bg-amber-100 text-amber-800">{item.performanceScore.toFixed(1)}</Badge>
+                    </div>
+                    <p className="mt-1 text-sm text-slate-700">
+                      {item.dailyAccess.ok ? "Reforcar metas de escrita" : "Chamar para acessar hoje"} - ultima atividade{" "}
+                      {formatLastAccess(item.lastActivity)}
+                    </p>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">

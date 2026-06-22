@@ -37,7 +37,7 @@ function getVisibleStudentIds(users: Awaited<ReturnType<typeof listUsers>>, view
   }
 
   if (viewer.role === "educator" && viewer.id > 0) {
-    students = students.filter((user) => user.assignedEducatorId === viewer.id || user.assignedEducatorId == null);
+    students = students.filter((user) => user.assignedEducatorId === viewer.id);
   }
 
   return new Set(students.map((user) => user.id));

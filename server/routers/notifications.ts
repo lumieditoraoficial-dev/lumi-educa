@@ -9,6 +9,7 @@ import {
   markAllNotificationsAsRead,
   markNotificationAsRead,
 } from "../db";
+import { sameSchool } from "../_core/schools";
 
 const staffRoles = new Set(["educator", "coordinator", "admin"]);
 
@@ -17,13 +18,30 @@ function conversationKey(userA: number, userB: number) {
   return `chat:${first}:${second}`;
 }
 
-function canChat(current: { id: number; role: string }, other: { id: number; role: string }) {
+function canChat(
+  current: { id: number; role: string; schoolId?: number | null; assignedEducatorId?: number | null },
+  other: { id: number; role: string; schoolId?: number | null; assignedEducatorId?: number | null }
+) {
   if (current.id === other.id) return false;
-  const currentIsStudent = current.role === "student";
-  const otherIsStudent = other.role === "student";
-  const currentIsStaff = staffRoles.has(current.role);
-  const otherIsStaff = staffRoles.has(other.role);
-  return (currentIsStudent && otherIsStaff) || (currentIsStaff && otherIsStudent);
+
+  if (current.role === "admin" && other.role === "student") return true;
+  if (current.role === "student" && other.role === "admin") return true;
+
+  if (current.role === "educator" && other.role === "student") {
+    return other.assignedEducatorId === current.id;
+  }
+  if (current.role === "student" && other.role === "educator") {
+    return current.assignedEducatorId === other.id;
+  }
+
+  if (current.role === "coordinator" && other.role === "student") {
+    return sameSchool(current, other);
+  }
+  if (current.role === "student" && other.role === "coordinator") {
+    return sameSchool(current, other);
+  }
+
+  return false;
 }
 
 export const notificationsRouter = router({
@@ -92,6 +110,7 @@ export const notificationsRouter = router({
       return users
         .filter((user) => staffRoles.has(user.role))
         .filter((user) => user.isActive !== false)
+        .filter((user) => canChat(ctx.user, user))
         .map((user) => ({
           id: user.id,
           name: user.name,
@@ -106,7 +125,7 @@ export const notificationsRouter = router({
       return users
         .filter((user) => user.role === "student")
         .filter((user) => user.isActive !== false)
-        .filter((user) => ctx.user.role !== "educator" || ctx.user.id < 0 || user.assignedEducatorId === ctx.user.id || user.assignedEducatorId == null)
+        .filter((user) => canChat(ctx.user, user))
         .map((user) => ({
           id: user.id,
           name: user.name,
@@ -125,7 +144,7 @@ export const notificationsRouter = router({
     .query(async ({ input, ctx }) => {
       const users = await listUsers();
       const other = users.find((user) => user.id === input.withUserId);
-      if (!other || !canChat({ id: ctx.user.id, role: ctx.user.role }, other)) {
+      if (!other || !canChat(ctx.user, other)) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
@@ -141,7 +160,7 @@ export const notificationsRouter = router({
     .mutation(async ({ input, ctx }) => {
       const users = await listUsers();
       const recipient = users.find((user) => user.id === input.toUserId);
-      if (!recipient || !canChat({ id: ctx.user.id, role: ctx.user.role }, recipient)) {
+      if (!recipient || !canChat(ctx.user, recipient)) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Conversa nao permitida para esses perfis." });
       }
 

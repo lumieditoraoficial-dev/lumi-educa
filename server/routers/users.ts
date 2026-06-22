@@ -113,7 +113,7 @@ export const usersRouter = router({
     }
 
     if (ctx.user.role === "educator" && ctx.user.id > 0) {
-      return students.filter((user) => user.assignedEducatorId === ctx.user.id || user.assignedEducatorId == null);
+      return students.filter((user) => user.assignedEducatorId === ctx.user.id);
     }
 
     return students;

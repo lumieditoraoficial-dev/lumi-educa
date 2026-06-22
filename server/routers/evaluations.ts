@@ -24,7 +24,7 @@ function visibleBookIdsForViewer(
     users
       .filter((user) => user.role === "student")
       .filter((user) => sameSchool(user, viewer))
-      .filter((user) => viewer.role !== "educator" || viewer.id <= 0 || user.assignedEducatorId === viewer.id || user.assignedEducatorId == null)
+      .filter((user) => viewer.role !== "educator" || viewer.id <= 0 || user.assignedEducatorId === viewer.id)
       .map((user) => user.id)
   );
 
@@ -38,7 +38,7 @@ async function assertCanSeeBook(book: { id: number; authorId: number }, viewer: 
   const author = users.find((user) => user.id === book.authorId);
   if (!author || !sameSchool(author, viewer)) throw new TRPCError({ code: "FORBIDDEN" });
 
-  if (viewer.role === "educator" && viewer.id > 0 && author.assignedEducatorId !== viewer.id && author.assignedEducatorId != null) {
+  if (viewer.role === "educator" && viewer.id > 0 && author.assignedEducatorId !== viewer.id) {
     throw new TRPCError({ code: "FORBIDDEN" });
   }
 }
