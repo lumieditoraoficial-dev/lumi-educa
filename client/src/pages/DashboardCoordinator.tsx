@@ -3,8 +3,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { buildClassInsights, buildStudentInsights, formatLastAccess, formatScore, isWeekend, toDate } from "@/lib/insights";
+import { ALL_SCHOOLS, SCHOOL_OPTIONS, type SchoolFilter, matchesSchool } from "@/lib/schools";
 import { trpc } from "@/lib/trpc";
 import { Activity, AlertTriangle, BarChart3, BookOpen, CheckCircle, Eye, TrendingUp, Users, Wifi, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -25,20 +27,33 @@ export default function DashboardCoordinator() {
   const utils = trpc.useUtils();
   const [feedbackByBook, setFeedbackByBook] = useState<Record<number, string>>({});
   const [scoreByBook, setScoreByBook] = useState<Record<number, string>>({});
+  const [schoolFilter, setSchoolFilter] = useState<SchoolFilter>(ALL_SCHOOLS);
   const [now, setNow] = useState(() => new Date());
-  const { data: books = [], isLoading } = trpc.books.listBooks.useQuery(undefined, { refetchInterval: 30_000 });
-  const { data: students = [] } = trpc.users.listStudents.useQuery(undefined, { refetchInterval: 15_000 });
-  const { data: evaluations = [] } = trpc.evaluations.listEvaluations.useQuery(undefined, { refetchInterval: 30_000 });
+  const { data: rawBooks = [], isLoading } = trpc.books.listBooks.useQuery(undefined, { refetchInterval: 30_000 });
+  const { data: rawStudents = [] } = trpc.users.listStudents.useQuery(undefined, { refetchInterval: 15_000 });
+  const { data: rawEvaluations = [] } = trpc.evaluations.listEvaluations.useQuery(undefined, { refetchInterval: 30_000 });
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(new Date()), 15_000);
     return () => window.clearInterval(interval);
   }, []);
 
-  const studentInsights = useMemo(
-    () => buildStudentInsights(students, books, evaluations, now),
-    [students, books, evaluations, now]
+  const students = useMemo(
+    () => rawStudents.filter((student) => matchesSchool(student.schoolId, schoolFilter)),
+    [rawStudents, schoolFilter]
   );
+  const studentById = useMemo(() => new Map(rawStudents.map((student) => [student.id, student])), [rawStudents]);
+  const books = useMemo(
+    () => rawBooks.filter((book) => matchesSchool(studentById.get(book.authorId)?.schoolId, schoolFilter)),
+    [rawBooks, studentById, schoolFilter]
+  );
+  const bookIds = useMemo(() => new Set(books.map((book) => book.id)), [books]);
+  const evaluations = useMemo(
+    () => rawEvaluations.filter((evaluation) => bookIds.has(evaluation.bookId)),
+    [rawEvaluations, bookIds]
+  );
+
+  const studentInsights = useMemo(() => buildStudentInsights(students, books, evaluations, now), [students, books, evaluations, now]);
   const classInsights = useMemo(() => buildClassInsights(studentInsights), [studentInsights]);
 
   const pendingApproval = books.filter((book) => book.status === "under_review");
@@ -105,6 +120,21 @@ export default function DashboardCoordinator() {
           <p className="mt-2 text-slate-600">
             Monitore turmas, acesso diario, desempenho pedagogico e fluxo de aprovacao das obras.
           </p>
+          <div className="mt-4 w-full max-w-xs">
+            <Select value={schoolFilter} onValueChange={(value: SchoolFilter) => setSchoolFilter(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_SCHOOLS}>Todas as escolas</SelectItem>
+                {SCHOOL_OPTIONS.map((school) => (
+                  <SelectItem key={school.id} value={String(school.id)}>
+                    {school.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">

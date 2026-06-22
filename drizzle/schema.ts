@@ -40,7 +40,7 @@ export const users = pgTable(
     passwordHash: varchar("passwordHash", { length: 255 }),
     loginMethod: varchar("loginMethod", { length: 64 }).default("email"),
     role: userRoleEnum("role").default("student").notNull(),
-    schoolId: integer("schoolId"),
+    schoolId: integer("schoolId").default(1),
     className: varchar("className", { length: 120 }),
     assignedEducatorId: integer("assignedEducatorId"),
     isActive: boolean("isActive").default(true).notNull(),

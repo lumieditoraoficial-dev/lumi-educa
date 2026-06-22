@@ -4,6 +4,7 @@ import { z } from "zod";
 import { COOKIE_NAME, ONE_YEAR_MS } from "../../shared/const";
 import { getSessionCookieOptions } from "../_core/cookies";
 import { ENV } from "../_core/env";
+import { normalizeSchoolId } from "../_core/schools";
 import { sdk } from "../_core/sdk";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { createUser, getUserByEmail, updateUserById } from "../db";
@@ -49,6 +50,7 @@ export const authRouter = router({
         name: z.string().min(2, "Nome deve ter no minimo 2 caracteres"),
         role: roleSchema.default("student"),
         avatarUrl: z.string().optional(),
+        schoolId: z.number().int().min(1).max(2).optional(),
         className: z.string().optional(),
         assignedEducatorId: z.number().nullable().optional(),
       })
@@ -67,6 +69,7 @@ export const authRouter = router({
         passwordHash: hashPassword(input.password),
         avatarUrl: input.avatarUrl,
         role: input.role,
+        schoolId: normalizeSchoolId(input.schoolId),
         className: input.className,
         assignedEducatorId: input.assignedEducatorId,
         loginMethod: "email",

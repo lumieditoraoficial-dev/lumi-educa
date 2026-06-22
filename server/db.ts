@@ -19,6 +19,7 @@ import {
   users,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
+import { normalizeSchoolId } from "./_core/schools";
 import { countWords } from "./_core/textReview";
 import {
   localCreateBook,
@@ -172,6 +173,10 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     } else if (user.openId === ENV.ownerOpenId) {
       values.role = "admin";
       updateSet.role = "admin";
+    }
+    if (user.schoolId !== undefined) {
+      values.schoolId = normalizeSchoolId(user.schoolId);
+      updateSet.schoolId = normalizeSchoolId(user.schoolId);
     }
 
     if (!values.lastSignedIn) {

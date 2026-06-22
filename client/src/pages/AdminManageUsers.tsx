@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { dailyAccessStatus, formatLastAccess, hasAccessedToday, isOnlineNow, lastActivityAt } from "@/lib/insights";
+import { ALL_SCHOOLS, SCHOOL_OPTIONS, type SchoolFilter, getSchoolLabel, matchesSchool, normalizeSchoolId } from "@/lib/schools";
 import { trpc } from "@/lib/trpc";
 import { Activity, Camera, Edit2, Loader2, Lock, Mail, Plus, Search, Trash2, User, UserCheck, UserX } from "lucide-react";
 import { toast } from "sonner";
@@ -36,6 +37,7 @@ const blankUser = {
   password: "",
   role: "student" as Role,
   avatarUrl: "",
+  schoolId: "1",
   className: "",
   assignedEducatorId: "",
 };
@@ -91,12 +93,24 @@ export default function AdminManageUsers() {
   const [editingUser, setEditingUser] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newUser, setNewUser] = useState({ ...blankUser });
+  const [schoolFilter, setSchoolFilter] = useState<SchoolFilter>(ALL_SCHOOLS);
   const [now, setNow] = useState(() => Date.now());
 
   const { data: users = [], isLoading, refetch } = trpc.users.listUsers.useQuery(undefined, {
     refetchInterval: 15_000,
   });
   const educators = useMemo(() => users.filter((user) => user.role === "educator"), [users]);
+  const educatorsForNewUser = useMemo(
+    () => educators.filter((educator) => normalizeSchoolId(educator.schoolId) === normalizeSchoolId(newUser.schoolId)),
+    [educators, newUser.schoolId]
+  );
+  const educatorsForEditingUser = useMemo(
+    () =>
+      editingUser
+        ? educators.filter((educator) => normalizeSchoolId(educator.schoolId) === normalizeSchoolId(editingUser.schoolId))
+        : educators,
+    [educators, editingUser]
+  );
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(Date.now()), 15_000);
@@ -130,12 +144,16 @@ export default function AdminManageUsers() {
     onError: (error) => toast.error(error.message || "Erro ao cadastrar usuario."),
   });
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.className?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter((user) => {
+    const query = searchTerm.toLowerCase();
+    const matchesSearch =
+      user.name?.toLowerCase().includes(query) ||
+      user.email?.toLowerCase().includes(query) ||
+      user.className?.toLowerCase().includes(query) ||
+      getSchoolLabel(user.schoolId).toLowerCase().includes(query);
+
+    return matchesSchool(user.schoolId, schoolFilter) && matchesSearch;
+  });
 
   const handleUpdateUser = () => {
     if (!editingUser) return;
@@ -150,6 +168,7 @@ export default function AdminManageUsers() {
       email: editingUser.email,
       role: editingUser.role,
       avatarUrl: editingUser.avatarUrl || null,
+      schoolId: normalizeSchoolId(editingUser.schoolId),
       className: editingUser.className || null,
       assignedEducatorId:
         editingUser.role === "student" && editingUser.assignedEducatorId ? Number(editingUser.assignedEducatorId) : null,
@@ -174,6 +193,7 @@ export default function AdminManageUsers() {
       password: newUser.password,
       role: newUser.role,
       avatarUrl: newUser.avatarUrl || undefined,
+      schoolId: normalizeSchoolId(newUser.schoolId),
       className: newUser.className || undefined,
       assignedEducatorId:
         newUser.role === "student" && newUser.assignedEducatorId ? Number(newUser.assignedEducatorId) : undefined,
@@ -289,6 +309,25 @@ export default function AdminManageUsers() {
               </label>
 
               <label className="space-y-1.5">
+                <span className="text-sm font-medium text-gray-700">Escola</span>
+                <Select
+                  value={String(normalizeSchoolId(newUser.schoolId))}
+                  onValueChange={(value) => setNewUser({ ...newUser, schoolId: value, assignedEducatorId: "" })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SCHOOL_OPTIONS.map((school) => (
+                      <SelectItem key={school.id} value={String(school.id)}>
+                        {school.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
+
+              <label className="space-y-1.5">
                 <span className="text-sm font-medium text-gray-700">Turma</span>
                 <Input value={newUser.className} onChange={(e) => setNewUser({ ...newUser, className: e.target.value })} />
               </label>
@@ -305,7 +344,7 @@ export default function AdminManageUsers() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Sem educador definido</SelectItem>
-                    {educators.map((educator) => (
+                    {educatorsForNewUser.map((educator) => (
                       <SelectItem key={educator.id} value={String(educator.id)}>
                         {educator.name}
                       </SelectItem>
@@ -397,6 +436,25 @@ export default function AdminManageUsers() {
                 </label>
 
                 <label className="space-y-1.5">
+                  <span className="text-sm font-medium text-gray-700">Escola</span>
+                  <Select
+                    value={String(normalizeSchoolId(editingUser.schoolId))}
+                    onValueChange={(value) => setEditingUser({ ...editingUser, schoolId: Number(value), assignedEducatorId: null })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SCHOOL_OPTIONS.map((school) => (
+                        <SelectItem key={school.id} value={String(school.id)}>
+                          {school.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </label>
+
+                <label className="space-y-1.5">
                   <span className="text-sm font-medium text-gray-700">Status da conta</span>
                   <Select
                     value={editingUser.isActive === false ? "inactive" : "active"}
@@ -434,7 +492,7 @@ export default function AdminManageUsers() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Sem educador definido</SelectItem>
-                      {educators.map((educator) => (
+                      {educatorsForEditingUser.map((educator) => (
                         <SelectItem key={educator.id} value={String(educator.id)}>
                           {educator.name}
                         </SelectItem>
@@ -459,14 +517,29 @@ export default function AdminManageUsers() {
 
       <Card>
         <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-            <Input
-              placeholder="Buscar por nome, email ou turma..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="grid gap-3 md:grid-cols-[1fr_220px]">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+              <Input
+                placeholder="Buscar por nome, email, escola ou turma..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={schoolFilter} onValueChange={(value: SchoolFilter) => setSchoolFilter(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_SCHOOLS}>Todas as escolas</SelectItem>
+                {SCHOOL_OPTIONS.map((school) => (
+                  <SelectItem key={school.id} value={String(school.id)}>
+                    {school.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -488,6 +561,7 @@ export default function AdminManageUsers() {
                     <TableHead>Foto</TableHead>
                     <TableHead>Nome</TableHead>
                     <TableHead>Perfil</TableHead>
+                    <TableHead>Escola</TableHead>
                     <TableHead>Presenca</TableHead>
                     <TableHead>Acesso diario</TableHead>
                     <TableHead>Turma</TableHead>
@@ -498,7 +572,7 @@ export default function AdminManageUsers() {
                 <TableBody>
                   {filteredUsers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="py-8 text-center text-gray-500">
+                      <TableCell colSpan={9} className="py-8 text-center text-gray-500">
                         Nenhum usuario encontrado.
                       </TableCell>
                     </TableRow>
@@ -523,6 +597,7 @@ export default function AdminManageUsers() {
                           <TableCell>
                             <Badge className={roleColors[user.role as Role]}>{roleLabels[user.role as Role]}</Badge>
                           </TableCell>
+                          <TableCell>{getSchoolLabel(user.schoolId)}</TableCell>
                           <TableCell>
                             <Badge className={state.className}>
                               <Icon className="mr-1 h-3 w-3" />

@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
-import { createEvaluation, createNotification, createPublication, getBookById, getPagesByBook, updateBook, updatePage } from "../db";
+import { createEvaluation, createNotification, createPublication, getBookById, getPagesByBook, listUsers, updateBook, updatePage } from "../db";
 import { TRPCError } from "@trpc/server";
+import { canSeeAllSchools, sameSchool } from "../_core/schools";
 import { polishHtmlForEducator } from "../_core/textReview";
 
 const editableBookStatuses = ["draft", "submitted", "under_review", "approved", "rejected"];
@@ -40,6 +41,20 @@ async function approveSubmittedPages(bookId: number, reviewerId: number) {
   );
 }
 
+async function assertStaffCanHandleBook(book: { authorId: number }, viewer: any) {
+  if (canSeeAllSchools(viewer)) return;
+
+  const users = await listUsers();
+  const author = users.find((user) => user.id === book.authorId);
+  if (!author || !sameSchool(author, viewer)) {
+    throw new TRPCError({ code: "FORBIDDEN" });
+  }
+
+  if (viewer.role === "educator" && viewer.id > 0 && author.assignedEducatorId !== viewer.id && author.assignedEducatorId != null) {
+    throw new TRPCError({ code: "FORBIDDEN" });
+  }
+}
+
 export const publicationsRouter = router({
   // Submit book for review
   submitForReview: protectedProcedure
@@ -72,6 +87,7 @@ export const publicationsRouter = router({
       const book = await getBookById(input.bookId);
       if (!book) throw new TRPCError({ code: "NOT_FOUND" });
       if (book.status !== "submitted") throw new TRPCError({ code: "BAD_REQUEST" });
+      await assertStaffCanHandleBook(book, ctx.user);
 
       await createEvaluation({
         bookId: input.bookId,
@@ -102,6 +118,7 @@ export const publicationsRouter = router({
       const book = await getBookById(input.bookId);
       if (!book) throw new TRPCError({ code: "NOT_FOUND" });
       if (book.status !== "submitted") throw new TRPCError({ code: "BAD_REQUEST" });
+      await assertStaffCanHandleBook(book, ctx.user);
 
       await createEvaluation({
         bookId: input.bookId,
@@ -135,6 +152,7 @@ export const publicationsRouter = router({
       const book = await getBookById(input.bookId);
       if (!book) throw new TRPCError({ code: "NOT_FOUND" });
       if (book.status !== "under_review") throw new TRPCError({ code: "BAD_REQUEST" });
+      await assertStaffCanHandleBook(book, ctx.user);
 
       await createEvaluation({
         bookId: input.bookId,
@@ -168,6 +186,7 @@ export const publicationsRouter = router({
       const book = await getBookById(input.bookId);
       if (!book) throw new TRPCError({ code: "NOT_FOUND" });
       if (!["under_review", "approved"].includes(book.status)) throw new TRPCError({ code: "BAD_REQUEST" });
+      await assertStaffCanHandleBook(book, ctx.user);
 
       await createEvaluation({
         bookId: input.bookId,
@@ -200,6 +219,7 @@ export const publicationsRouter = router({
       const book = await getBookById(input.bookId);
       if (!book) throw new TRPCError({ code: "NOT_FOUND" });
       if (book.status !== "approved") throw new TRPCError({ code: "BAD_REQUEST" });
+      await assertStaffCanHandleBook(book, ctx.user);
 
       const updatedBook = await updateBook(input.bookId, {
         status: "published",

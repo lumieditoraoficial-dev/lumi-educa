@@ -19,6 +19,7 @@ import type {
   RubricScore,
   User,
 } from "../drizzle/schema";
+import { normalizeSchoolId } from "./_core/schools";
 
 type Role = NonNullable<User["role"]>;
 
@@ -136,6 +137,13 @@ function syncBookMetrics(data: LocalData, bookId: number) {
   book.updatedAt = new Date();
 }
 
+function withSchoolDefault<T extends User>(user: T): T {
+  return {
+    ...user,
+    schoolId: normalizeSchoolId(user.schoolId),
+  };
+}
+
 export const masterRoles: Role[] = ["student", "educator", "coordinator", "editor", "admin"];
 
 const masterProfiles: Record<Role, { id: number; name: string; email: string }> = {
@@ -163,7 +171,7 @@ export function getMasterUser(role: Role): User {
     passwordHash: null,
     loginMethod: "master",
     role,
-    schoolId: null,
+    schoolId: normalizeSchoolId(null),
     className: null,
     assignedEducatorId: null,
     isActive: true,
@@ -183,7 +191,7 @@ export function getMasterUserByOpenId(openId: string | null | undefined): User |
 
 export async function localListUsers() {
   const data = await readData();
-  return data.users;
+  return data.users.map(withSchoolDefault);
 }
 
 export async function localGetUserByOpenId(openId: string) {
@@ -191,13 +199,15 @@ export async function localGetUserByOpenId(openId: string) {
   if (masterUser) return masterUser;
 
   const data = await readData();
-  return data.users.find((user) => user.openId === openId);
+  const user = data.users.find((item) => item.openId === openId);
+  return user ? withSchoolDefault(user) : undefined;
 }
 
 export async function localGetUserByEmail(email: string) {
   const normalized = email.toLowerCase();
   const data = await readData();
-  return data.users.find((user) => user.email?.toLowerCase() === normalized);
+  const user = data.users.find((item) => item.email?.toLowerCase() === normalized);
+  return user ? withSchoolDefault(user) : undefined;
 }
 
 export async function localCreateUser(user: InsertUser) {
@@ -212,7 +222,7 @@ export async function localCreateUser(user: InsertUser) {
       passwordHash: user.passwordHash ?? null,
       loginMethod: user.loginMethod ?? "email",
       role: user.role ?? "student",
-      schoolId: user.schoolId ?? null,
+      schoolId: normalizeSchoolId(user.schoolId),
       className: user.className ?? null,
       assignedEducatorId: user.assignedEducatorId ?? null,
       isActive: user.isActive ?? true,
@@ -244,7 +254,7 @@ export async function localUpsertUser(user: InsertUser) {
         passwordHash: user.passwordHash ?? null,
         loginMethod: user.loginMethod ?? "email",
         role: user.role ?? "student",
-        schoolId: user.schoolId ?? null,
+        schoolId: normalizeSchoolId(user.schoolId),
         className: user.className ?? null,
         assignedEducatorId: user.assignedEducatorId ?? null,
         isActive: user.isActive ?? true,
@@ -263,7 +273,7 @@ export async function localUpsertUser(user: InsertUser) {
       passwordHash: user.passwordHash ?? existing.passwordHash,
       loginMethod: user.loginMethod ?? existing.loginMethod,
       role: user.role ?? existing.role,
-      schoolId: user.schoolId ?? existing.schoolId,
+      schoolId: user.schoolId === undefined ? normalizeSchoolId(existing.schoolId) : normalizeSchoolId(user.schoolId),
       className: user.className ?? existing.className ?? null,
       assignedEducatorId: user.assignedEducatorId ?? existing.assignedEducatorId ?? null,
       isActive: user.isActive ?? existing.isActive ?? true,

@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { createHash, randomBytes } from "crypto";
 import { z } from "zod";
+import { canSeeAllSchools, normalizeSchoolId, sameSchool } from "../_core/schools";
 import { protectedProcedure, router } from "../_core/trpc";
 import { deleteUserById, getUserByEmail, listUsers, updateUserById } from "../db";
 
@@ -10,6 +11,11 @@ function hashPassword(password: string): string {
   const salt = randomBytes(16).toString("hex");
   const hash = createHash("sha256").update(`${salt}:${password}`).digest("hex");
   return `${salt}:${hash}`;
+}
+
+function usersVisibleToViewer(users: Awaited<ReturnType<typeof listUsers>>, viewer: any) {
+  if (canSeeAllSchools(viewer)) return users;
+  return users.filter((user) => sameSchool(user, viewer));
 }
 
 export const usersRouter = router({
@@ -25,7 +31,8 @@ export const usersRouter = router({
       throw new TRPCError({ code: "FORBIDDEN" });
     }
 
-    return listUsers();
+    const allUsers = await listUsers();
+    return usersVisibleToViewer(allUsers, ctx.user);
   }),
 
   getUser: protectedProcedure
@@ -36,7 +43,11 @@ export const usersRouter = router({
       }
 
       const allUsers = await listUsers();
-      return allUsers.find((user) => user.id === input.userId) ?? null;
+      const user = allUsers.find((item) => item.id === input.userId) ?? null;
+      if (user && !canSeeAllSchools(ctx.user) && !sameSchool(user, ctx.user) && ctx.user.id !== input.userId) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      return user;
     }),
 
   updateUser: protectedProcedure
@@ -47,6 +58,7 @@ export const usersRouter = router({
         email: z.string().email().optional(),
         role: roleSchema.optional(),
         avatarUrl: z.string().nullable().optional(),
+        schoolId: z.number().int().min(1).max(2).nullable().optional(),
         className: z.string().nullable().optional(),
         assignedEducatorId: z.number().nullable().optional(),
         isActive: z.boolean().optional(),
@@ -64,11 +76,21 @@ export const usersRouter = router({
         }
       }
 
+      if (input.assignedEducatorId !== undefined && input.assignedEducatorId !== null) {
+        const allUsers = await listUsers();
+        const targetUser = allUsers.find((user) => user.id === input.userId);
+        const educator = allUsers.find((user) => user.id === input.assignedEducatorId && user.role === "educator");
+        if (!targetUser || !educator || !sameSchool({ schoolId: input.schoolId ?? targetUser.schoolId }, educator)) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Aluno e educador precisam ser da mesma escola." });
+        }
+      }
+
       const updates = {
         ...(input.name !== undefined ? { name: input.name } : {}),
         ...(input.email !== undefined ? { email: input.email.toLowerCase() } : {}),
         ...(input.role !== undefined ? { role: input.role } : {}),
         ...(input.avatarUrl !== undefined ? { avatarUrl: input.avatarUrl } : {}),
+        ...(input.schoolId !== undefined ? { schoolId: normalizeSchoolId(input.schoolId) } : {}),
         ...(input.className !== undefined ? { className: input.className } : {}),
         ...(input.assignedEducatorId !== undefined ? { assignedEducatorId: input.assignedEducatorId } : {}),
         ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
@@ -84,7 +106,11 @@ export const usersRouter = router({
     }
 
     const allUsers = await listUsers();
-    const students = allUsers.filter((user) => user.role === "student");
+    let students = allUsers.filter((user) => user.role === "student");
+
+    if (!canSeeAllSchools(ctx.user)) {
+      students = students.filter((user) => sameSchool(user, ctx.user));
+    }
 
     if (ctx.user.role === "educator" && ctx.user.id > 0) {
       return students.filter((user) => user.assignedEducatorId === ctx.user.id || user.assignedEducatorId == null);
@@ -150,6 +176,13 @@ export const usersRouter = router({
       if (input.educatorId !== undefined && input.educatorId !== null) {
         const educator = allUsers.find((user) => user.id === input.educatorId && user.role === "educator");
         if (!educator) throw new TRPCError({ code: "BAD_REQUEST", message: "Educador invalido." });
+        if (!sameSchool(student, educator)) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Aluno e educador precisam ser da mesma escola." });
+        }
+      }
+
+      if (!canSeeAllSchools(ctx.user) && !sameSchool(student, ctx.user)) {
+        throw new TRPCError({ code: "FORBIDDEN" });
       }
 
       return updateUserById(input.studentId, {

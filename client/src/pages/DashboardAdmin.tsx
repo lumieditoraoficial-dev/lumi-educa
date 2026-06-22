@@ -2,6 +2,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SCHOOL_OPTIONS, normalizeSchoolId } from "@/lib/schools";
 import { trpc } from "@/lib/trpc";
 import { Activity, ArrowLeft, BookOpen, Database, Eye, Settings, ShieldCheck, Trophy, Users } from "lucide-react";
 import { useState } from "react";
@@ -47,6 +48,19 @@ export default function DashboardAdmin() {
 
   const publishedBooks = books.filter((book) => book.status === "published");
   const pendingBooks = books.filter((book) => ["submitted", "under_review", "approved"].includes(book.status));
+  const userById = new Map(users.map((user) => [user.id, user]));
+  const schoolSummaries = SCHOOL_OPTIONS.map((school) => {
+    const schoolUsers = users.filter((user) => normalizeSchoolId(user.schoolId) === school.id);
+    const schoolBooks = books.filter((book) => normalizeSchoolId(userById.get(book.authorId)?.schoolId) === school.id);
+    return {
+      ...school,
+      users: schoolUsers.length,
+      students: schoolUsers.filter((user) => user.role === "student").length,
+      educators: schoolUsers.filter((user) => user.role === "educator").length,
+      books: schoolBooks.length,
+      published: schoolBooks.filter((book) => book.status === "published").length,
+    };
+  });
 
   return (
     <DashboardLayout>
@@ -94,6 +108,34 @@ export default function DashboardAdmin() {
               </Card>
             );
           })}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {schoolSummaries.map((school) => (
+            <Card key={school.id} className="lumi-cup-card rounded-lg">
+              <CardHeader>
+                <CardTitle>{school.label}</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-3 sm:grid-cols-4">
+                <div>
+                  <p className="text-sm text-slate-600">Alunos</p>
+                  <p className="text-2xl font-bold text-slate-950">{school.students}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Educadores</p>
+                  <p className="text-2xl font-bold text-slate-950">{school.educators}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Livros</p>
+                  <p className="text-2xl font-bold text-slate-950">{school.books}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Publicados</p>
+                  <p className="text-2xl font-bold text-emerald-700">{school.published}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">

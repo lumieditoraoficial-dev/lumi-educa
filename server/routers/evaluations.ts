@@ -3,6 +3,7 @@ import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import {
   createEvaluation,
+  getAllBooks,
   createRubricScore,
   getBookById,
   getBooksByAuthor,
@@ -10,6 +11,37 @@ import {
   getRubricScoresByEvaluation,
   listUsers,
 } from "../db";
+import { canSeeAllSchools, sameSchool } from "../_core/schools";
+
+function visibleBookIdsForViewer(
+  books: Awaited<ReturnType<typeof getAllBooks>>,
+  users: Awaited<ReturnType<typeof listUsers>>,
+  viewer: any
+) {
+  if (canSeeAllSchools(viewer)) return new Set(books.map((book) => book.id));
+
+  const visibleStudentIds = new Set(
+    users
+      .filter((user) => user.role === "student")
+      .filter((user) => sameSchool(user, viewer))
+      .filter((user) => viewer.role !== "educator" || viewer.id <= 0 || user.assignedEducatorId === viewer.id || user.assignedEducatorId == null)
+      .map((user) => user.id)
+  );
+
+  return new Set(books.filter((book) => visibleStudentIds.has(book.authorId)).map((book) => book.id));
+}
+
+async function assertCanSeeBook(book: { id: number; authorId: number }, viewer: any) {
+  if (book.authorId === viewer.id || canSeeAllSchools(viewer)) return;
+
+  const users = await listUsers();
+  const author = users.find((user) => user.id === book.authorId);
+  if (!author || !sameSchool(author, viewer)) throw new TRPCError({ code: "FORBIDDEN" });
+
+  if (viewer.role === "educator" && viewer.id > 0 && author.assignedEducatorId !== viewer.id && author.assignedEducatorId != null) {
+    throw new TRPCError({ code: "FORBIDDEN" });
+  }
+}
 
 export const evaluationsRouter = router({
   createEvaluation: protectedProcedure
@@ -33,6 +65,7 @@ export const evaluationsRouter = router({
 
       const book = await getBookById(input.bookId);
       if (!book) throw new TRPCError({ code: "NOT_FOUND" });
+      await assertCanSeeBook(book, ctx.user);
 
       const avgScore =
         input.scores.reduce((sum, score) => sum + score.score, 0) / input.scores.length;
@@ -72,6 +105,7 @@ export const evaluationsRouter = router({
       ) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
+      await assertCanSeeBook(book, ctx.user);
 
       return getEvaluationsByBook(input.bookId);
     }),
@@ -88,6 +122,7 @@ export const evaluationsRouter = router({
       ) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
+      await assertCanSeeBook(book, ctx.user);
 
       const [evaluations, users] = await Promise.all([getEvaluationsByBook(input.bookId), listUsers()]);
       return evaluations
@@ -109,7 +144,12 @@ export const evaluationsRouter = router({
     }
 
     const { listEvaluations } = await import("../db");
-    return listEvaluations();
+    const allEvaluations = await listEvaluations();
+    if (canSeeAllSchools(ctx.user)) return allEvaluations;
+
+    const [books, users] = await Promise.all([getAllBooks(), listUsers()]);
+    const visibleBookIds = visibleBookIdsForViewer(books, users, ctx.user);
+    return allEvaluations.filter((evaluation) => visibleBookIds.has(evaluation.bookId));
   }),
 
   myEvaluations: protectedProcedure.query(async ({ ctx }) => {

@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ALL_SCHOOLS, SCHOOL_OPTIONS, type SchoolFilter, getSchoolLabel, matchesSchool } from "@/lib/schools";
 import { trpc } from "@/lib/trpc";
 import { BookOpen, Download, ExternalLink, Eye, FileText, Search, ShieldCheck, UserRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -43,6 +44,7 @@ export default function AdminBookObserver() {
   const { data: books = [], isLoading } = trpc.books.listBooks.useQuery();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [schoolFilter, setSchoolFilter] = useState<SchoolFilter>(ALL_SCHOOLS);
   const [selectedBookId, setSelectedBookId] = useState<number | null>(null);
 
   const authorsById = useMemo(() => {
@@ -57,14 +59,15 @@ export default function AdminBookObserver() {
       .filter((book: any) => (statusFilter === "all" ? true : book.status === statusFilter))
       .filter((book: any) => {
         const author = authorsById.get(book.authorId);
-        const haystack = [book.title, book.subtitle, book.description, book.category, book.series, author?.name, author?.email]
+        if (!matchesSchool(author?.schoolId, schoolFilter)) return false;
+        const haystack = [book.title, book.subtitle, book.description, book.category, book.series, author?.name, author?.email, getSchoolLabel(author?.schoolId)]
           .filter(Boolean)
           .join(" ")
           .toLowerCase();
         return !query || haystack.includes(query);
       })
       .sort((a: any, b: any) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime());
-  }, [authorsById, books, search, statusFilter]);
+  }, [authorsById, books, search, schoolFilter, statusFilter]);
 
   useEffect(() => {
     if (filteredBooks.length === 0) {
@@ -112,7 +115,7 @@ export default function AdminBookObserver() {
 
       <Card>
         <CardContent className="pt-6">
-          <div className="grid gap-3 lg:grid-cols-[1fr_220px]">
+          <div className="grid gap-3 lg:grid-cols-[1fr_220px_220px]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
@@ -122,6 +125,18 @@ export default function AdminBookObserver() {
                 className="pl-9"
               />
             </div>
+            <select
+              value={schoolFilter}
+              onChange={(event) => setSchoolFilter(event.target.value as SchoolFilter)}
+              className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+            >
+              <option value={ALL_SCHOOLS}>Todas as escolas</option>
+              {SCHOOL_OPTIONS.map((school) => (
+                <option key={school.id} value={String(school.id)}>
+                  {school.label}
+                </option>
+              ))}
+            </select>
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
@@ -169,7 +184,9 @@ export default function AdminBookObserver() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate font-semibold text-slate-950">{book.title}</p>
-                        <p className="mt-1 truncate text-xs text-slate-500">{author?.name ?? `Aluno #${book.authorId}`}</p>
+                        <p className="mt-1 truncate text-xs text-slate-500">
+                          {author?.name ?? `Aluno #${book.authorId}`} - {getSchoolLabel(author?.schoolId)}
+                        </p>
                       </div>
                       <Badge variant="secondary">{statusLabels[book.status] ?? book.status}</Badge>
                     </div>
@@ -206,6 +223,7 @@ export default function AdminBookObserver() {
                         <UserRound className="h-4 w-4" />
                         {selectedAuthor?.name ?? `Aluno #${selectedBook.authorId}`}
                       </span>
+                      <span>{getSchoolLabel(selectedAuthor?.schoolId)}</span>
                       <span>{sortedPages.length} paginas</span>
                       <span>{totalWords} palavras no documento</span>
                       <span>Atualizado em {formatDate(selectedBook.updatedAt)}</span>

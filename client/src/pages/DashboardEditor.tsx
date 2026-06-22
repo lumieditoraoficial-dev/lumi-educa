@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ALL_SCHOOLS, SCHOOL_OPTIONS, type SchoolFilter, getSchoolLabel, matchesSchool, normalizeSchoolId } from "@/lib/schools";
 import { trpc } from "@/lib/trpc";
 import {
   Award,
@@ -79,6 +80,7 @@ function readCover(file: File, onLoad: (value: string) => void) {
 
 export default function DashboardEditor() {
   const [selectedBookId, setSelectedBookId] = useState<number | null>(null);
+  const [schoolFilter, setSchoolFilter] = useState<SchoolFilter>(ALL_SCHOOLS);
   const [goals, setGoals] = useState<EditorGoals>(() => {
     try {
       const saved = localStorage.getItem(goalStorageKey);
@@ -134,9 +136,21 @@ export default function DashboardEditor() {
     localStorage.setItem(goalStorageKey, JSON.stringify(goals));
   }, [goals]);
 
-  const students = useMemo(() => users.filter((user) => user.role === "student"), [users]);
-  const educators = useMemo(() => users.filter((user) => user.role === "educator"), [users]);
-  const editableBooks = books.filter((book) => ["under_review", "approved", "published"].includes(book.status));
+  const userById = useMemo(() => new Map(users.map((user) => [user.id, user])), [users]);
+  const students = useMemo(
+    () => users.filter((user) => user.role === "student" && matchesSchool(user.schoolId, schoolFilter)),
+    [users, schoolFilter]
+  );
+  const educators = useMemo(
+    () => users.filter((user) => user.role === "educator" && matchesSchool(user.schoolId, schoolFilter)),
+    [users, schoolFilter]
+  );
+  const visibleBooks = useMemo(
+    () => books.filter((book) => matchesSchool(userById.get(book.authorId)?.schoolId, schoolFilter)),
+    [books, userById, schoolFilter]
+  );
+  const visibleBookIds = useMemo(() => new Set(visibleBooks.map((book) => book.id)), [visibleBooks]);
+  const editableBooks = visibleBooks.filter((book) => ["under_review", "approved", "published"].includes(book.status));
   const selectedBook = editableBooks.find((book) => book.id === selectedBookId) ?? editableBooks[0] ?? null;
 
   const evaluationsByBook = useMemo(() => {
@@ -156,8 +170,7 @@ export default function DashboardEditor() {
     return validScores.reduce((sum, score) => sum + score, 0) / validScores.length;
   };
 
-  const getStudentName = (authorId: number) =>
-    users.find((user) => user.id === authorId)?.name || `Aluno #${authorId}`;
+  const getStudentName = (authorId: number) => userById.get(authorId)?.name || `Aluno #${authorId}`;
 
   const getEducatorName = (educatorId?: number | null) =>
     educators.find((educator) => educator.id === educatorId)?.name || "Sem educador";
@@ -189,9 +202,9 @@ export default function DashboardEditor() {
     return { score, reasons };
   };
 
-  const monthlyBooks = books.filter((book) => isThisMonth(book.updatedAt ?? book.createdAt));
+  const monthlyBooks = visibleBooks.filter((book) => isThisMonth(book.updatedAt ?? book.createdAt));
   const monthlyEvaluationScores = evaluations
-    .filter((evaluation) => isThisMonth(evaluation.updatedAt ?? evaluation.createdAt))
+    .filter((evaluation) => visibleBookIds.has(evaluation.bookId) && isThisMonth(evaluation.updatedAt ?? evaluation.createdAt))
     .map((evaluation) => numberValue(evaluation.score))
     .filter((score) => score > 0);
 
@@ -208,7 +221,7 @@ export default function DashboardEditor() {
 
   const performance = students
     .map((student) => {
-      const studentBooks = books.filter((book) => book.authorId === student.id);
+      const studentBooks = visibleBooks.filter((book) => book.authorId === student.id);
       const studentScores = studentBooks
         .flatMap((book) => evaluationsByBook.get(book.id) ?? [])
         .map((evaluation) => numberValue(evaluation.score))
@@ -264,21 +277,36 @@ export default function DashboardEditor() {
           <div className="relative z-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div className="max-w-3xl">
               <Badge className="mb-4 border border-[#F4C430]/35 bg-[#F4C430]/18 px-3 py-1 text-[#F4C430] hover:bg-[#F4C430]/18">
-                Central editorial Brasil
+                {schoolFilter === ALL_SCHOOLS ? "Todas as escolas" : getSchoolLabel(schoolFilter)}
               </Badge>
               <h1 className="text-4xl font-bold tracking-normal md:text-5xl">Painel do Editor</h1>
               <p className="mt-3 max-w-2xl text-base leading-7 text-white/78">
                 Revise layout, acompanhe desempenho, receba relatórios mensais e transforme produções aprovadas em livros prontos para a biblioteca.
               </p>
             </div>
-            <div className="grid w-full max-w-md gap-3 sm:grid-cols-2">
-              <div className="rounded-lg border border-white/16 bg-white/10 p-4 backdrop-blur">
-                <p className="text-sm text-white/65">Fila editorial</p>
-                <p className="mt-1 text-3xl font-bold text-white">{editableBooks.length}</p>
-              </div>
-              <div className="rounded-lg border border-[#F4C430]/26 bg-[#F4C430]/16 p-4 backdrop-blur">
-                <p className="text-sm text-[#F4C430]/85">Publicados</p>
-                <p className="mt-1 text-3xl font-bold text-white">{books.filter((book) => book.status === "published").length}</p>
+            <div className="grid w-full max-w-md gap-3">
+              <Select value={schoolFilter} onValueChange={(value: SchoolFilter) => setSchoolFilter(value)}>
+                <SelectTrigger className="border-white/20 bg-white/12 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL_SCHOOLS}>Todas as escolas</SelectItem>
+                  {SCHOOL_OPTIONS.map((school) => (
+                    <SelectItem key={school.id} value={String(school.id)}>
+                      {school.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-white/16 bg-white/10 p-4 backdrop-blur">
+                  <p className="text-sm text-white/65">Fila editorial</p>
+                  <p className="mt-1 text-3xl font-bold text-white">{editableBooks.length}</p>
+                </div>
+                <div className="rounded-lg border border-[#F4C430]/26 bg-[#F4C430]/16 p-4 backdrop-blur">
+                  <p className="text-sm text-[#F4C430]/85">Publicados</p>
+                  <p className="mt-1 text-3xl font-bold text-white">{visibleBooks.filter((book) => book.status === "published").length}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -287,8 +315,8 @@ export default function DashboardEditor() {
         <div className="grid gap-4 md:grid-cols-4">
           {[
             { label: "Fila editorial", value: editableBooks.length, icon: FileText },
-            { label: "Aprovados", value: books.filter((book) => book.status === "approved").length, icon: CheckCircle2 },
-            { label: "Publicados", value: books.filter((book) => book.status === "published").length, icon: BookMarked },
+            { label: "Aprovados", value: visibleBooks.filter((book) => book.status === "approved").length, icon: CheckCircle2 },
+            { label: "Publicados", value: visibleBooks.filter((book) => book.status === "published").length, icon: BookMarked },
             { label: "Média do mês", value: monthlyReport.averageScore?.toFixed(1) ?? "-", icon: Award },
           ].map((item) => {
             const Icon = item.icon;
@@ -400,7 +428,8 @@ export default function DashboardEditor() {
                     <div>
                       <p className="font-semibold text-slate-950">{student.name}</p>
                       <p className="text-sm text-slate-600">
-                        {student.email} | {student.className || "Sem turma"} | {getEducatorName(student.assignedEducatorId)}
+                        {student.email} | {getSchoolLabel(student.schoolId)} | {student.className || "Sem turma"} |{" "}
+                        {getEducatorName(student.assignedEducatorId)}
                       </p>
                     </div>
                   </div>
@@ -418,11 +447,13 @@ export default function DashboardEditor() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Sem educador</SelectItem>
-                      {educators.map((educator) => (
-                        <SelectItem key={educator.id} value={String(educator.id)}>
-                          {educator.name}
-                        </SelectItem>
-                      ))}
+                      {educators
+                        .filter((educator) => normalizeSchoolId(educator.schoolId) === normalizeSchoolId(student.schoolId))
+                        .map((educator) => (
+                          <SelectItem key={educator.id} value={String(educator.id)}>
+                            {educator.name}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                   <Input

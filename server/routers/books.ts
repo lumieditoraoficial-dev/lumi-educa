@@ -15,6 +15,7 @@ import {
   updatePage,
 } from "../db";
 import { TRPCError } from "@trpc/server";
+import { canSeeAllSchools, sameSchool } from "../_core/schools";
 import { countWords } from "../_core/textReview";
 
 const staffRoles = ["educator", "coordinator", "editor", "admin"];
@@ -26,6 +27,27 @@ async function syncBookMetrics(bookId: number) {
     pageCount: pages.length,
     wordCount: pages.reduce((sum, page) => sum + countWords(page.content), 0),
   });
+}
+
+function getVisibleStudentIds(users: Awaited<ReturnType<typeof listUsers>>, viewer: any) {
+  let students = users.filter((user) => user.role === "student");
+
+  if (!canSeeAllSchools(viewer)) {
+    students = students.filter((user) => sameSchool(user, viewer));
+  }
+
+  if (viewer.role === "educator" && viewer.id > 0) {
+    students = students.filter((user) => user.assignedEducatorId === viewer.id || user.assignedEducatorId == null);
+  }
+
+  return new Set(students.map((user) => user.id));
+}
+
+function canAccessBook(book: { authorId: number }, viewer: any, users: Awaited<ReturnType<typeof listUsers>>) {
+  if (book.authorId === viewer.id) return true;
+  if (!staffRoles.includes(viewer.role)) return false;
+  if (canSeeAllSchools(viewer)) return true;
+  return getVisibleStudentIds(users, viewer).has(book.authorId);
 }
 
 export const booksRouter = router({
@@ -44,14 +66,9 @@ export const booksRouter = router({
 
     const books = await getAllBooks();
 
-    if (ctx.user.role === "educator" && ctx.user.id > 0) {
+    if (!canSeeAllSchools(ctx.user)) {
       const users = await listUsers();
-      const allowedStudentIds = new Set(
-        users
-          .filter((user) => user.role === "student")
-          .filter((user) => user.assignedEducatorId === ctx.user.id || user.assignedEducatorId == null)
-          .map((user) => user.id)
-      );
+      const allowedStudentIds = getVisibleStudentIds(users, ctx.user);
       return books.filter((book) => allowedStudentIds.has(book.authorId));
     }
 
@@ -66,7 +83,8 @@ export const booksRouter = router({
       if (!book) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
-      if (book.authorId !== ctx.user.id && !staffRoles.includes(ctx.user.role)) {
+      const users = await listUsers();
+      if (!canAccessBook(book, ctx.user, users)) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
       return book;
@@ -104,7 +122,8 @@ export const booksRouter = router({
     .query(async ({ input, ctx }) => {
       const book = await getBookById(input.bookId);
       if (!book) throw new TRPCError({ code: "NOT_FOUND" });
-      if (book.authorId !== ctx.user.id && !staffRoles.includes(ctx.user.role)) {
+      const users = await listUsers();
+      if (!canAccessBook(book, ctx.user, users)) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
       return getPagesByBook(input.bookId);
@@ -214,8 +233,9 @@ export const booksRouter = router({
       const book = await getBookById(input.bookId);
       if (!book) throw new TRPCError({ code: "NOT_FOUND" });
 
+      const users = await listUsers();
       const canEditOwn = ctx.user.role === "student" && book.authorId === ctx.user.id && book.status !== "published";
-      const canEditEditorial = ["editor", "coordinator", "admin"].includes(ctx.user.role);
+      const canEditEditorial = ["editor", "coordinator", "admin"].includes(ctx.user.role) && canAccessBook(book, ctx.user, users);
 
       if (!canEditOwn && !canEditEditorial) {
         throw new TRPCError({ code: "FORBIDDEN" });
@@ -237,8 +257,9 @@ export const booksRouter = router({
       const book = await getBookById(input.bookId);
       if (!book) throw new TRPCError({ code: "NOT_FOUND" });
 
+      const users = await listUsers();
       const canDeleteOwn = ctx.user.role === "student" && book.authorId === ctx.user.id && book.status !== "published";
-      const canDeleteEditorial = ["editor", "admin"].includes(ctx.user.role);
+      const canDeleteEditorial = ["editor", "admin"].includes(ctx.user.role) && canAccessBook(book, ctx.user, users);
 
       if (!canDeleteOwn && !canDeleteEditorial) {
         throw new TRPCError({ code: "FORBIDDEN" });
