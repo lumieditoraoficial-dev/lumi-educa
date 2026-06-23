@@ -188,10 +188,9 @@ export default function BookPages({ bookId }: { bookId: number }) {
             <CardContent className="relative grid gap-6 p-6 md:grid-cols-[minmax(0,1fr)_18rem] md:p-8">
               <div>
                 <Badge className="bg-white/15 text-white hover:bg-white/20">Livro contínuo</Badge>
-                <h2 className="mt-4 text-3xl font-black tracking-tight">Continue escrevendo sem montar página por página</h2>
+                <h2 className="mt-4 text-3xl font-black tracking-tight">Documento do livro</h2>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-white/82">
-                  O aluno escreve em um documento único, coloca imagens quando precisar e o corte da próxima página aparece automaticamente.
-                  Quando uma parte já foi corrigida, a próxima continuação é criada para enviar páginas novas.
+                  Documento único do livro, com imagens, corte automático de páginas e continuidade liberada para novas entregas.
                 </p>
                 <div className="mt-5 flex flex-wrap gap-2">
                   <Button
@@ -345,7 +344,7 @@ export default function BookPages({ bookId }: { bookId: number }) {
               <div className="rounded-lg border border-dashed p-10 text-center">
                 <FileText className="mx-auto h-12 w-12 text-slate-300" />
                 <p className="mt-3 font-medium text-slate-800">Este livro ainda não tem texto.</p>
-                <p className="mt-1 text-sm text-slate-600">Continue escrevendo e o sistema cria a primeira página automaticamente.</p>
+                <p className="mt-1 text-sm text-slate-600">Abra o editor para iniciar o documento.</p>
                 {canEdit ? (
                   <Button className="mt-5 bg-emerald-800 hover:bg-emerald-900" onClick={openWritingStudio}>
                     <BookOpen className="mr-2 h-4 w-4" />

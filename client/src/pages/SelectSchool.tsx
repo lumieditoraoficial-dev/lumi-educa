@@ -229,7 +229,7 @@ export default function SelectSchool() {
               Acesse dados, brasao, turmas, livros e acompanhamentos vinculados a escola selecionada.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
-              {["Brasao da escola", "Dados separados", "Tema Brasil"].map((item) => (
+              {["Escola", "Turmas", "Livros"].map((item) => (
                 <span key={item} className="rounded-full border border-[#0F3D2E]/10 bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-[#0F3D2E]">
                   {item}
                 </span>
@@ -311,7 +311,7 @@ export default function SelectSchool() {
       <Dialog open={Boolean(editingSchool)} onOpenChange={(open) => (!open ? setEditingSchool(null) : null)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Identidade da escola</DialogTitle>
+            <DialogTitle>Editar escola</DialogTitle>
             <DialogDescription>Atualize o nome e o brasao que aparecem na entrada interna.</DialogDescription>
           </DialogHeader>
 
