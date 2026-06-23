@@ -9,6 +9,7 @@ import { publicationsRouter } from "./routers/publications";
 import { aiRouter } from "./routers/ai";
 import { certificatesRouter } from "./routers/certificates";
 import { notificationsRouter } from "./routers/notifications";
+import { schoolsRouter } from "./routers/schools";
 import { usersRouter } from "./routers/users";
 import { authRouter } from "./routers/auth";
 
@@ -23,6 +24,7 @@ export const appRouter = router({
   ai: aiRouter,
   certificates: certificatesRouter,
   notifications: notificationsRouter,
+  schools: schoolsRouter,
   users: usersRouter,
 });
 

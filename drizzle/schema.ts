@@ -66,6 +66,7 @@ export const schools = pgTable("schools", {
   address: varchar("address", { length: 255 }),
   city: varchar("city", { length: 100 }),
   state: varchar("state", { length: 100 }),
+  logoUrl: text("logoUrl"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });

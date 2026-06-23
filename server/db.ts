@@ -8,7 +8,9 @@ import {
   InsertNotification,
   InsertPage,
   InsertPublication,
+  InsertSchool,
   InsertUser,
+  School,
   books,
   certificates,
   evaluations,
@@ -16,6 +18,7 @@ import {
   pages,
   publications,
   rubricScores,
+  schools,
   users,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
@@ -45,6 +48,7 @@ import {
   localGetPagesByBook,
   localGetPublishedBooks,
   localGetRubricScoresByEvaluation,
+  localListSchools,
   localGetUserByEmail,
   localGetUserByOpenId,
   localListUsers,
@@ -55,6 +59,7 @@ import {
   localMarkNotificationAsRead,
   localUpdateBook,
   localUpdatePage,
+  localUpdateSchool,
   localUpdateUser,
   localUpsertUser,
 } from "./localStore";
@@ -248,6 +253,62 @@ export async function deleteUserById(userId: number) {
   if (!db) return localDeleteUser(userId);
 
   return db.delete(users).where(eq(users.id, userId));
+}
+
+const defaultSchools: Array<Omit<School, "createdAt" | "updatedAt">> = [
+  {
+    id: 1,
+    name: "Escola 1",
+    description: "Unidade principal",
+    address: null,
+    city: null,
+    state: null,
+    logoUrl: null,
+  },
+  {
+    id: 2,
+    name: "Escola 2",
+    description: "Segunda unidade",
+    address: null,
+    city: null,
+    state: null,
+    logoUrl: null,
+  },
+];
+
+async function ensureDefaultSchools(db: NonNullable<Awaited<ReturnType<typeof getDb>>>) {
+  const existing = await db.select().from(schools).orderBy(schools.id);
+  const existingIds = new Set(existing.map((school) => school.id));
+  const missing = defaultSchools.filter((school) => !existingIds.has(school.id));
+
+  if (missing.length > 0) {
+    await db.insert(schools).values(missing).onConflictDoNothing();
+    return db.select().from(schools).orderBy(schools.id);
+  }
+
+  return existing;
+}
+
+// Schools
+export async function listSchools() {
+  const db = await getDb();
+  if (!db) return localListSchools();
+
+  return ensureDefaultSchools(db);
+}
+
+export async function updateSchoolById(schoolId: number, updates: Partial<InsertSchool>) {
+  const db = await getDb();
+  if (!db) return localUpdateSchool(schoolId, updates);
+
+  await ensureDefaultSchools(db);
+
+  const [result] = await db
+    .update(schools)
+    .set({ ...updates, updatedAt: new Date() })
+    .where(eq(schools.id, normalizeSchoolId(schoolId)))
+    .returning();
+  return result || null;
 }
 
 // Books

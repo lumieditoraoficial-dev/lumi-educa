@@ -12,11 +12,13 @@ import type {
   InsertNotification,
   InsertPage,
   InsertPublication,
+  InsertSchool,
   InsertUser,
   Notification,
   Page,
   Publication,
   RubricScore,
+  School,
   User,
 } from "../drizzle/schema";
 import { normalizeSchoolId } from "./_core/schools";
@@ -33,6 +35,7 @@ type LocalData = {
   certificates: Certificate[];
   notifications: Notification[];
   aiSuggestions: AISuggestion[];
+  schools: School[];
 };
 
 const DATA_DIR = process.env.LOCAL_DATA_DIR
@@ -52,6 +55,7 @@ const emptyData = (): LocalData => ({
   certificates: [],
   notifications: [],
   aiSuggestions: [],
+  schools: [],
 });
 
 const dateKeys = [
@@ -86,6 +90,7 @@ function reviveData(data: LocalData): LocalData {
     certificates: data.certificates.map((item) => reviveDates(item)),
     notifications: data.notifications.map((item) => reviveDates(item)),
     aiSuggestions: data.aiSuggestions.map((item) => reviveDates(item)),
+    schools: data.schools.map((item) => reviveDates(item)),
   };
 }
 
@@ -144,6 +149,42 @@ function withSchoolDefault<T extends User>(user: T): T {
   };
 }
 
+function makeDefaultSchool(id: number): School {
+  const now = new Date();
+  return {
+    id,
+    name: id === 1 ? "Escola 1" : "Escola 2",
+    description: id === 1 ? "Unidade principal" : "Segunda unidade",
+    address: null,
+    city: null,
+    state: null,
+    logoUrl: null,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function ensureLocalSchools(data: LocalData) {
+  for (const schoolId of [1, 2]) {
+    const existing = data.schools.find((school) => school.id === schoolId);
+    if (!existing) {
+      data.schools.push(makeDefaultSchool(schoolId));
+    } else {
+      existing.name = existing.name || `Escola ${schoolId}`;
+      existing.description = existing.description ?? (schoolId === 1 ? "Unidade principal" : "Segunda unidade");
+      existing.address = existing.address ?? null;
+      existing.city = existing.city ?? null;
+      existing.state = existing.state ?? null;
+      existing.logoUrl = existing.logoUrl ?? null;
+      existing.createdAt = existing.createdAt ?? new Date();
+      existing.updatedAt = existing.updatedAt ?? new Date();
+    }
+  }
+
+  data.schools.sort((left, right) => left.id - right.id);
+  return data.schools;
+}
+
 export const masterRoles: Role[] = ["student", "educator", "coordinator", "editor", "admin"];
 
 const masterProfiles: Record<Role, { id: number; name: string; email: string }> = {
@@ -187,6 +228,21 @@ export function getMasterUserByOpenId(openId: string | null | undefined): User |
 
   const role = openId.replace("master_", "") as Role;
   return masterRoles.includes(role) ? getMasterUser(role) : undefined;
+}
+
+export async function localListSchools() {
+  return mutateData((data) => ensureLocalSchools(data).map((school) => ({ ...school })));
+}
+
+export async function localUpdateSchool(schoolId: number, updates: Partial<InsertSchool>) {
+  return mutateData((data) => {
+    const targetId = normalizeSchoolId(schoolId);
+    const school = ensureLocalSchools(data).find((item) => item.id === targetId);
+    if (!school) return null;
+
+    Object.assign(school, updates, { updatedAt: new Date() });
+    return { ...school };
+  });
 }
 
 export async function localListUsers() {

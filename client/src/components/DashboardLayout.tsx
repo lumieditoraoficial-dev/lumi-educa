@@ -124,7 +124,14 @@ function DashboardLayoutContent({
   const lastHeartbeatRef = useRef(0);
   const isMobile = useIsMobile();
   const { schoolFilter } = useSelectedSchoolFilter();
-  const showSchoolSwitcher = user?.role && user.role !== "student";
+  const showSchoolSwitcher = Boolean(user && user.id < 0);
+  const { data: schools = [] } = trpc.schools.listSchools.useQuery(undefined, {
+    enabled: showSchoolSwitcher,
+  });
+  const selectedSchoolName =
+    schoolFilter === "all"
+      ? "Nenhuma escola escolhida"
+      : schools.find((school) => String(school.id) === String(schoolFilter))?.name ?? getSchoolLabel(schoolFilter);
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: dashboardByRole[user?.role ?? "student"] ?? "/dashboard/student" },
     ...(user?.role === "student"
@@ -374,7 +381,7 @@ function DashboardLayoutContent({
                 </span>
                 <div>
                   <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Escola selecionada</p>
-                  <p className="font-semibold text-slate-950">{schoolFilter === "all" ? "Nenhuma escola escolhida" : getSchoolLabel(schoolFilter)}</p>
+                  <p className="font-semibold text-slate-950">{selectedSchoolName}</p>
                 </div>
               </div>
               <Button variant="outline" className="gap-2" onClick={() => setLocation("/select-school")}>
