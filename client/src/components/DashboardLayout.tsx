@@ -21,9 +21,9 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/useMobile";
-import { getSchoolLabel } from "@/lib/schools";
+import { getSchoolLabel, normalizeSchoolId } from "@/lib/schools";
 import { useSelectedSchoolFilter } from "@/lib/selectedSchool";
-import { Bell, BookOpen, Building2, LayoutDashboard, Library, LogOut, MessageCircle, PanelLeft, Repeat2, Server, Settings, UserRound, Users } from "lucide-react";
+import { Bell, BookOpen, Building2, GraduationCap, LayoutDashboard, Library, LogOut, MessageCircle, PanelLeft, Repeat2, Server, Settings, ShieldCheck, Trophy, UserRound, Users } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -126,12 +126,25 @@ function DashboardLayoutContent({
   const { schoolFilter } = useSelectedSchoolFilter();
   const showSchoolSwitcher = Boolean(user && user.id < 0);
   const { data: schools = [] } = trpc.schools.listSchools.useQuery(undefined, {
-    enabled: showSchoolSwitcher,
+    enabled: Boolean(user),
   });
+  const selectedSchoolId =
+    user?.id && user.id < 0
+      ? schoolFilter === "all"
+        ? null
+        : normalizeSchoolId(schoolFilter)
+      : normalizeSchoolId(user?.schoolId);
+  const selectedSchool = selectedSchoolId
+    ? schools.find((school) => normalizeSchoolId(school.id) === selectedSchoolId)
+    : undefined;
   const selectedSchoolName =
-    schoolFilter === "all"
-      ? "Nenhuma escola escolhida"
-      : schools.find((school) => String(school.id) === String(schoolFilter))?.name ?? getSchoolLabel(schoolFilter);
+    selectedSchool?.name ??
+    (selectedSchoolId ? getSchoolLabel(selectedSchoolId) : "Escolha uma escola");
+  const selectedSchoolLocation =
+    [selectedSchool?.city, selectedSchool?.state].filter(Boolean).join(" - ") ||
+    selectedSchool?.address ||
+    selectedSchool?.description ||
+    "Projeto Lumi Educa";
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: dashboardByRole[user?.role ?? "student"] ?? "/dashboard/student" },
     ...(user?.role === "student"
@@ -267,9 +280,24 @@ function DashboardLayoutContent({
 
           <SidebarContent className="gap-0 bg-[#0F3D2E]">
             {!isCollapsed ? (
-              <div className="mx-3 mb-2 rounded-lg border border-[#F4C430]/25 bg-[#123C8C]/25 px-3 py-3 text-[#F7F3E9]">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#F4C430]">Copa da Escrita</p>
-                <p className="mt-1 text-sm leading-5 text-white/78">Cada página é um lance novo na jornada do aluno.</p>
+              <div className="mx-3 mb-2 overflow-hidden rounded-lg border border-[#F4C430]/25 bg-[#123C8C]/25 text-[#F7F3E9]">
+                <div className="relative p-3">
+                  <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full border-[16px] border-[#F4C430]/15" />
+                  <div className="relative flex items-center gap-3">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/18 bg-white/12">
+                      {selectedSchool?.logoUrl ? (
+                        <img src={selectedSchool.logoUrl} alt={selectedSchoolName} className="h-full w-full object-cover" />
+                      ) : (
+                        <ShieldCheck className="h-6 w-6 text-[#F4C430]" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[0.64rem] font-semibold uppercase tracking-[0.22em] text-[#F4C430]">Copa da Escrita</p>
+                      <p className="mt-1 truncate text-sm font-bold text-white">{selectedSchoolName}</p>
+                      <p className="truncate text-xs text-white/58">{selectedSchoolLocation}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : null}
             <SidebarMenu className="px-2 py-1">
@@ -372,22 +400,39 @@ function DashboardLayoutContent({
             </div>
           </div>
         )}
-        {showSchoolSwitcher ? (
-          <div className="sticky top-0 z-30 border-b bg-white/88 px-4 py-3 backdrop-blur md:px-6">
-            <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3 text-sm text-slate-700">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#0F3D2E] text-white">
-                  <Building2 className="h-4 w-4" />
+        {user ? (
+          <div className="sticky top-0 z-30 border-b border-[#0F3D2E]/10 bg-white/88 px-4 py-3 backdrop-blur md:px-6">
+            <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex min-w-0 items-center gap-3 text-sm text-slate-700">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#0F3D2E]/10 bg-[#0F3D2E] text-white shadow-sm">
+                  {selectedSchool?.logoUrl ? (
+                    <img src={selectedSchool.logoUrl} alt={selectedSchoolName} className="h-full w-full object-cover" />
+                  ) : (
+                    <Building2 className="h-5 w-5" />
+                  )}
                 </span>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Escola selecionada</p>
-                  <p className="font-semibold text-slate-950">{selectedSchoolName}</p>
+                <div className="min-w-0">
+                  <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Ambiente da escola</p>
+                  <p className="truncate text-base font-bold text-slate-950">{selectedSchoolName}</p>
+                  <p className="truncate text-xs text-slate-500">{selectedSchoolLocation}</p>
                 </div>
               </div>
-              <Button variant="outline" className="gap-2" onClick={() => setLocation("/select-school")}>
-                <Repeat2 className="h-4 w-4" />
-                Trocar escola
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#F4C430]/45 bg-[#fff8d7] px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-[#0F3D2E]">
+                  <Trophy className="h-3.5 w-3.5" />
+                  Tema Brasil
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#0F3D2E]/10 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+                  <GraduationCap className="h-3.5 w-3.5 text-[#266B3D]" />
+                  {user.role === "student" ? "Aluno" : user.role === "educator" ? "Educador" : user.role === "coordinator" ? "Coordenador" : user.role === "editor" ? "Editor" : "Administrador"}
+                </span>
+                {showSchoolSwitcher ? (
+                  <Button variant="outline" className="gap-2" onClick={() => setLocation("/select-school")}>
+                    <Repeat2 className="h-4 w-4" />
+                    Trocar escola
+                  </Button>
+                ) : null}
+              </div>
             </div>
           </div>
         ) : null}

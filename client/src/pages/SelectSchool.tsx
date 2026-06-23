@@ -210,41 +210,49 @@ export default function SelectSchool() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F7EB] px-4 py-8 text-[#0F3D2E]">
+    <div className="lumi-page-aura min-h-screen px-4 py-8 text-[#0F3D2E]">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-6xl flex-col">
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
           <BrandLogo showTagline />
-          <Badge className="w-fit border border-[#F4C430]/40 bg-white px-3 py-1 text-[#0F3D2E] hover:bg-white">
+          <Badge className="w-fit border border-[#F4C430]/40 bg-white/88 px-3 py-1 text-[#0F3D2E] shadow-sm hover:bg-white">
             Acesso interno
           </Badge>
         </div>
 
         <main className="flex flex-1 flex-col justify-center py-10">
-          <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#266B3D]">Selecionar escola</p>
-            <h1 className="mt-3 text-4xl font-bold tracking-normal text-slate-950 md:text-5xl">
+          <div className="lumi-school-ribbon rounded-lg p-6 md:p-8">
+            <p className="text-sm font-black uppercase tracking-[0.2em] text-[#266B3D]">Selecionar escola</p>
+            <h1 className="mt-3 max-w-4xl text-4xl font-black tracking-normal text-slate-950 md:text-5xl">
               Escolha a escola que voce quer acompanhar agora.
             </h1>
-            <p className="mt-4 text-lg leading-8 text-slate-600">
+            <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-600">
               Esta etapa aparece apenas no acesso interno. Alunos, educadores e coordenadores cadastrados entram direto no painel deles.
             </p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {["Brasao da escola", "Dados separados", "Tema Brasil"].map((item) => (
+                <span key={item} className="rounded-full border border-[#0F3D2E]/10 bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-[#0F3D2E]">
+                  {item}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2">
             {schoolCards.map((school) => (
-              <Card key={school.id} className="overflow-hidden rounded-lg border-[#0F3D2E]/10 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
-                <CardHeader className="border-b bg-[#0F3D2E] text-white">
+              <Card key={school.id} className="lumi-premium-card overflow-hidden rounded-lg transition hover:-translate-y-1 hover:shadow-xl">
+                <CardHeader className="relative overflow-hidden border-b bg-[#0F3D2E] text-white">
+                  <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full border-[24px] border-[#F4C430]/14" />
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex min-w-0 items-center gap-4">
-                      <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/20 bg-white/10">
+                      <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/24 bg-white/12 shadow-lg">
                         {school.logoUrl ? (
                           <img src={school.logoUrl} alt={`Brasao ${school.name}`} className="h-full w-full object-cover" />
                         ) : (
                           <Building2 className="h-8 w-8 text-[#F4C430]" />
                         )}
                       </div>
-                      <div className="min-w-0">
-                        <CardTitle className="truncate text-2xl">{school.name}</CardTitle>
+                      <div className="min-w-0 relative">
+                        <CardTitle className="truncate text-2xl font-black">{school.name}</CardTitle>
                         <p className="mt-2 flex items-center gap-2 text-sm text-white/75">
                           <MapPin className="h-4 w-4 shrink-0" />
                           <span className="truncate">{school.location}</span>
@@ -258,24 +266,24 @@ export default function SelectSchool() {
                 </CardHeader>
                 <CardContent className="space-y-5 p-5">
                   <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-lg bg-slate-50 p-3">
+                    <div className="rounded-lg border border-[#0F3D2E]/8 bg-white/78 p-3">
                       <Users className="h-4 w-4 text-[#123C8C]" />
                       <p className="mt-2 text-2xl font-bold text-slate-950">{school.students}</p>
                       <p className="text-xs text-slate-500">alunos</p>
                     </div>
-                    <div className="rounded-lg bg-slate-50 p-3">
+                    <div className="rounded-lg border border-[#0F3D2E]/8 bg-white/78 p-3">
                       <Building2 className="h-4 w-4 text-[#266B3D]" />
                       <p className="mt-2 text-2xl font-bold text-slate-950">{school.classes}</p>
                       <p className="text-xs text-slate-500">turmas</p>
                     </div>
-                    <div className="rounded-lg bg-slate-50 p-3">
+                    <div className="rounded-lg border border-[#0F3D2E]/8 bg-white/78 p-3">
                       <Activity className="h-4 w-4 text-[#F4C430]" />
                       <p className="mt-2 text-2xl font-bold text-slate-950">{school.id}</p>
                       <p className="text-xs text-slate-500">unidade</p>
                     </div>
                   </div>
 
-                  <div className="flex flex-col justify-between gap-3 rounded-lg border p-3">
+                  <div className="flex flex-col justify-between gap-3 rounded-lg border border-[#0F3D2E]/10 bg-white/72 p-3">
                     <p className="flex items-center gap-2 text-sm text-slate-600">
                       <Clock3 className="h-4 w-4" />
                       Ultima atualizacao: {formatDate(school.lastUpdated)}
