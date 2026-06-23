@@ -107,7 +107,7 @@ export default function SystemStatus() {
             <p className="mt-5 text-sm font-semibold uppercase tracking-[0.2em] text-[#F4C430]">Status do Sistema</p>
             <h1 className="mt-2 text-4xl font-bold tracking-normal">Verificação do Lumi Educa</h1>
             <p className="mt-3 max-w-2xl text-white/75">
-              Acompanhe link, banco de dados, saúde do servidor e pontos críticos antes de apresentar ou usar com a escola.
+              Acompanhe link, banco de dados, saúde do servidor e pontos críticos do ambiente escolar.
             </p>
           </div>
           <Button onClick={runChecks} disabled={isChecking} className="bg-[#F4C430] font-semibold text-[#0F3D2E] hover:bg-[#ffdc3b]">

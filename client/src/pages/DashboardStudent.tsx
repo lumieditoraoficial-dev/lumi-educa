@@ -88,7 +88,7 @@ export default function DashboardStudent() {
               <Badge className="bg-white/15 text-white hover:bg-white/20">Autoria jovem</Badge>
               <h1 className="mt-4 text-4xl font-black tracking-tight md:text-5xl">Meus livros</h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-white/82">
-                Escreva historias, acompanhe feedbacks e transforme suas ideias em um livro com cara de publicacao.
+                Sua biblioteca de escrita, revisoes recebidas, metas e livros em andamento.
               </p>
               <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold text-white/85">
                 <span className="rounded-full bg-white/12 px-3 py-1">Quebra de pagina</span>
@@ -106,7 +106,7 @@ export default function DashboardStudent() {
                   <p className="font-bold">Continuar escrevendo</p>
                 </div>
               </div>
-              <p className="mt-4 text-sm leading-6 text-white/75">O aluno escreve no mesmo documento e a proxima pagina aparece automaticamente.</p>
+              <p className="mt-4 text-sm leading-6 text-white/75">Abra seu livro, continue o texto e salve novas versoes com seguranca.</p>
             </div>
           </div>
         </div>

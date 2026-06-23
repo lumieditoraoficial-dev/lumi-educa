@@ -223,10 +223,10 @@ export default function SelectSchool() {
           <div className="lumi-school-ribbon rounded-lg p-6 md:p-8">
             <p className="text-sm font-black uppercase tracking-[0.2em] text-[#266B3D]">Selecionar escola</p>
             <h1 className="mt-3 max-w-4xl text-4xl font-black tracking-normal text-slate-950 md:text-5xl">
-              Escolha a escola que voce quer acompanhar agora.
+              Escolha a unidade escolar.
             </h1>
             <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-600">
-              Esta etapa aparece apenas no acesso interno. Alunos, educadores e coordenadores cadastrados entram direto no painel deles.
+              Acesse dados, brasao, turmas, livros e acompanhamentos vinculados a escola selecionada.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               {["Brasao da escola", "Dados separados", "Tema Brasil"].map((item) => (

@@ -524,6 +524,7 @@
     color: #17251f;
     line-height: 1.78;
     overflow-wrap: anywhere;
+    caret-color: #0f3d2e;
   }
 
   .lumi-page-stack-editor:focus {
@@ -563,21 +564,24 @@
   }
 
   .lumi-inline-page-break {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: var(--lumi-page-gap);
+    position: relative;
+    left: auto;
+    right: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 -4.75rem;
+    min-height: var(--lumi-page-gap);
     border-top: 1px dashed rgba(15, 61, 46, 0.22);
     border-bottom: 1px dashed rgba(15, 61, 46, 0.16);
     background:
       linear-gradient(90deg, transparent 0, rgba(15, 61, 46, 0.08) 50%, transparent 100%);
+    pointer-events: none;
+    user-select: none;
   }
 
   .lumi-inline-page-break span {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    position: relative;
     border: 1px solid rgba(15, 61, 46, 0.14);
     border-radius: 999px;
     background: #eef4e3;
@@ -603,6 +607,10 @@
 
     .lumi-page-stack-editor {
       padding: 2.2rem 1.35rem;
+    }
+
+    .lumi-inline-page-break {
+      margin-inline: -1.35rem;
     }
 
   }

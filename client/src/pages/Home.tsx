@@ -6,7 +6,7 @@ import { useLocation } from "wouter";
 
 const features = [
   {
-    title: "Escrita com cara de livro",
+    title: "Escrita do livro",
     description: "O aluno escreve em fluxo continuo, com paginas visuais, capitulos e imagens no texto.",
     icon: PenLine,
   },
@@ -31,8 +31,8 @@ const features = [
     icon: Sparkles,
   },
   {
-    title: "Projeto com presenca",
-    description: "Visual tematico, humano e preparado para apresentacao para direcao e alunos.",
+    title: "Rotina escolar ativa",
+    description: "Acesso diario, metas por turma, acompanhamento por escola e historico de participacao.",
     icon: Trophy,
   },
 ];
@@ -101,7 +101,7 @@ export default function Home() {
                   Da sala de aula ao livro publicado.
                 </h1>
                 <p className="mt-5 max-w-2xl text-lg leading-8 text-[#F7F3E9]/88">
-                  O Lumi Educa transforma producao textual em uma experiencia viva: o aluno escreve, a escola acompanha, o professor orienta e o livro ganha forma.
+                  No Lumi Educa, o aluno escreve, a escola acompanha, o professor orienta e o livro ganha forma ate a publicacao.
                 </p>
                 <div className="mt-6 min-h-[4.5rem] max-w-2xl border-l-4 border-[#F4C430] pl-5">
                   <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#F4C430]">Frase em destaque</p>
@@ -113,7 +113,7 @@ export default function Home() {
                     className="h-12 bg-[#F4C430] px-7 font-black text-[#0F3D2E] hover:bg-[#ffdc3b]"
                     onClick={() => navigate("/login")}
                   >
-                    Acessar plataforma
+                    Acessar conta
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                   <Button
@@ -131,8 +131,8 @@ export default function Home() {
                 <div className="lumi-glass-panel rounded-lg p-5">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm uppercase tracking-[0.2em] text-[#F4C430]">Projeto escolar</p>
-                      <h2 className="mt-2 text-2xl font-black text-white">Livro em construcao</h2>
+                      <p className="text-sm uppercase tracking-[0.2em] text-[#F4C430]">Escrita em andamento</p>
+                      <h2 className="mt-2 text-2xl font-black text-white">Livro do aluno</h2>
                     </div>
                     <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-[#F4C430] text-[#0F3D2E]">
                       <BookOpen className="h-7 w-7" />
@@ -167,13 +167,13 @@ export default function Home() {
           <div className="mx-auto max-w-7xl">
             <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
               <div>
-                <p className="text-sm font-black uppercase tracking-[0.28em] text-[#123C8C]">Tudo em um so lugar</p>
+                <p className="text-sm font-black uppercase tracking-[0.28em] text-[#123C8C]">Ambiente oficial</p>
                 <h2 className="mt-3 max-w-3xl text-4xl font-black tracking-normal text-[#0F3D2E]">
-                  Bonito para apresentar. Forte para usar todos os dias.
+                  Rede de autoria estudantil para usar todos os dias.
                 </h2>
               </div>
               <p className="max-w-xl text-base leading-7 text-[#0F3D2E]/70">
-                O visual valoriza o projeto da escola e a estrutura organiza escrita, avaliacao, metas, relatorios e publicacao.
+                A estrutura organiza escrita, avaliacao, metas, relatorios e publicacao com identidade de cada escola.
               </p>
             </div>
 

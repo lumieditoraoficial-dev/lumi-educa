@@ -90,7 +90,7 @@ export default function Signup() {
 
         <Card className="rounded-lg border-0 bg-white shadow-2xl">
           <CardHeader>
-            <CardTitle className="text-center text-2xl text-[#0F3D2E]">Criar usuario real</CardTitle>
+            <CardTitle className="text-center text-2xl text-[#0F3D2E]">Cadastrar usuario</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">

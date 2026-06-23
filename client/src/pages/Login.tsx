@@ -101,7 +101,7 @@ export default function Login() {
               Entre na sua jornada de escrita.
             </h1>
             <p className="mt-6 max-w-2xl text-xl leading-8 text-white/80">
-              Alunos entram direto no painel da escola. O acesso interno escolhe a unidade e acompanha tudo com nome e brasao.
+              Sua conta abre o painel da escola, com escrita, avaliacao, biblioteca, metas e comunicados em um unico ambiente.
             </p>
             <div className="mt-8 max-w-2xl border-l-4 border-[#F4C430] pl-5">
               <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#F4C430]">Inspiracao</p>
@@ -130,12 +130,12 @@ export default function Login() {
               </div>
               <div>
                 <CardTitle className="text-2xl text-[#0F3D2E]">
-                  {loginMode === "master" ? "Acesso interno" : "Entrar na plataforma"}
+                  {loginMode === "master" ? "Acesso interno" : "Acessar conta"}
                 </CardTitle>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
                   {loginMode === "master"
                     ? "Use a senha mestra para escolher a escola e administrar o ambiente."
-                    : "Use seu email cadastrado para entrar direto no painel da sua escola."}
+                    : "Use seu email cadastrado para entrar no painel da sua escola."}
                 </p>
               </div>
             </CardHeader>
@@ -203,7 +203,7 @@ export default function Login() {
 
               <div className="mt-6 flex items-center justify-between gap-3 text-sm">
                 <button className="font-medium text-[#266B3D]" onClick={() => navigate("/signup")}>
-                  Criar usuario real
+                  Cadastrar usuario
                 </button>
                 <button
                   className="text-slate-600 hover:text-[#266B3D]"

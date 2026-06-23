@@ -29,7 +29,11 @@ import { toast } from "sonner";
 import { useLocation } from "wouter";
 
 const PAGE_HEIGHT = 1040;
-const PAGE_GAP = 42;
+const PAGE_GAP = 54;
+const PAGE_MARGIN_TOP = 64;
+const PAGE_MARGIN_BOTTOM = 76;
+const PAGE_STRIDE = PAGE_HEIGHT + PAGE_GAP;
+const AUTO_PAGE_BREAK_SELECTOR = "[data-lumi-auto-page-break='true']";
 const MAX_IMAGE_SIZE = 2.5 * 1024 * 1024;
 
 function stripHtml(content: string) {
@@ -60,7 +64,7 @@ function textToParagraphs(text: string) {
 
 function parseSavedContent(savedContent: string) {
   if (typeof window === "undefined" || !savedContent.includes("data-lumi-page-content")) {
-    return { html: savedContent, fontSize: 17 };
+    return { html: removeAutoPageBreaks(savedContent), fontSize: 17 };
   }
 
   const documentParser = new DOMParser();
@@ -69,19 +73,151 @@ function parseSavedContent(savedContent: string) {
   const parsedFontSize = Number.parseInt(wrapper?.style.fontSize ?? "", 10);
 
   return {
-    html: wrapper?.innerHTML ?? savedContent,
+    html: removeAutoPageBreaks(wrapper?.innerHTML ?? savedContent),
     fontSize: Number.isFinite(parsedFontSize) ? parsedFontSize : 17,
   };
 }
 
 function serializeContent(html: string, fontSize: number) {
-  return `<div data-lumi-page-content="true" data-lumi-version="4" style="font-size: ${fontSize}px;">${html}</div>`;
+  return `<div data-lumi-page-content="true" data-lumi-version="5" style="font-size: ${fontSize}px;">${removeAutoPageBreaks(html)}</div>`;
 }
 
 function calculatePageCount(element: HTMLDivElement | null) {
   if (!element) return 1;
   const contentHeight = Math.max(PAGE_HEIGHT, element.scrollHeight);
-  return Math.max(1, Math.ceil(contentHeight / PAGE_HEIGHT));
+  return Math.max(1, Math.ceil((contentHeight + PAGE_GAP) / PAGE_STRIDE));
+}
+
+function removeAutoPageBreaks(html: string) {
+  if (typeof window === "undefined" || !html.includes("data-lumi-auto-page-break")) return html;
+  const documentParser = new DOMParser();
+  const parsed = documentParser.parseFromString(`<main>${html}</main>`, "text/html");
+  parsed.querySelectorAll(AUTO_PAGE_BREAK_SELECTOR).forEach((breakElement) => breakElement.remove());
+  return parsed.querySelector("main")?.innerHTML ?? html;
+}
+
+function removeAutoPageBreakElements(editor: HTMLElement) {
+  editor.querySelectorAll(AUTO_PAGE_BREAK_SELECTOR).forEach((breakElement) => breakElement.remove());
+}
+
+function createAutoPageBreak(height: number, pageNumber: number) {
+  const breakElement = document.createElement("div");
+  breakElement.className = "lumi-inline-page-break";
+  breakElement.dataset.lumiAutoPageBreak = "true";
+  breakElement.contentEditable = "false";
+  breakElement.style.height = `${Math.max(PAGE_GAP, Math.ceil(height))}px`;
+  breakElement.innerHTML = `<span>pagina ${pageNumber}</span>`;
+  return breakElement;
+}
+
+function wrapLooseTextNodes(editor: HTMLDivElement) {
+  Array.from(editor.childNodes).forEach((node) => {
+    if (node.nodeType !== Node.TEXT_NODE || !node.textContent?.trim()) return;
+    const paragraph = document.createElement("p");
+    paragraph.textContent = node.textContent;
+    node.replaceWith(paragraph);
+  });
+}
+
+function cloneBareTextBlock(element: HTMLElement, text: string) {
+  const clone = element.cloneNode(false) as HTMLElement;
+  clone.textContent = text;
+  return clone;
+}
+
+function splitPlainTextBlock(element: HTMLElement, contentEnd: number, nextContentStart: number, nextPageNumber: number) {
+  const tagName = element.tagName.toLowerCase();
+  if (!["p", "div", "li"].includes(tagName)) return false;
+  if (element.children.length > 0) return false;
+
+  const originalText = element.textContent ?? "";
+  if (originalText.trim().length < 80) return false;
+
+  let low = 12;
+  let high = originalText.length - 12;
+  let best = 0;
+
+  while (low <= high) {
+    const middle = Math.floor((low + high) / 2);
+    element.textContent = originalText.slice(0, middle);
+    const bottom = element.offsetTop + element.offsetHeight;
+
+    if (bottom <= contentEnd) {
+      best = middle;
+      low = middle + 1;
+    } else {
+      high = middle - 1;
+    }
+  }
+
+  if (best < 24 || best >= originalText.length - 24) {
+    element.textContent = originalText;
+    return false;
+  }
+
+  const naturalSplit = originalText.lastIndexOf(" ", best);
+  const splitIndex = naturalSplit > 24 ? naturalSplit : best;
+  const firstPart = originalText.slice(0, splitIndex).trimEnd();
+  const secondPart = originalText.slice(splitIndex).trimStart();
+
+  if (!firstPart || !secondPart) {
+    element.textContent = originalText;
+    return false;
+  }
+
+  element.textContent = firstPart;
+  const breakHeight = Math.max(PAGE_GAP + PAGE_MARGIN_TOP, nextContentStart - (element.offsetTop + element.offsetHeight));
+  element.after(createAutoPageBreak(breakHeight, nextPageNumber), cloneBareTextBlock(element, secondPart));
+  return true;
+}
+
+function normalizePageFlow(editor: HTMLDivElement | null) {
+  if (!editor) return 1;
+
+  removeAutoPageBreakElements(editor);
+  wrapLooseTextNodes(editor);
+
+  let guard = 0;
+  while (guard < 120) {
+    guard += 1;
+    let changed = false;
+    const elements = Array.from(editor.children).filter(
+      (child): child is HTMLElement => child instanceof HTMLElement && !child.matches(AUTO_PAGE_BREAK_SELECTOR)
+    );
+
+    for (const element of elements) {
+      const top = element.offsetTop;
+      const height = element.offsetHeight;
+      if (height <= 0) continue;
+
+      const pageIndex = Math.max(0, Math.floor(top / PAGE_STRIDE));
+      const pageStart = pageIndex * PAGE_STRIDE;
+      const contentEnd = pageStart + PAGE_HEIGHT - PAGE_MARGIN_BOTTOM;
+      const nextContentStart = pageStart + PAGE_STRIDE + PAGE_MARGIN_TOP;
+      const bottom = top + height;
+
+      if (bottom <= contentEnd || top >= nextContentStart) continue;
+
+      const pageContentHeight = PAGE_HEIGHT - PAGE_MARGIN_TOP - PAGE_MARGIN_BOTTOM;
+      const startsAtPageTop = top <= pageStart + PAGE_MARGIN_TOP + 8;
+      const shouldSplitLongText = height > pageContentHeight && contentEnd - top > 120;
+
+      if (shouldSplitLongText && splitPlainTextBlock(element, contentEnd, nextContentStart, pageIndex + 2)) {
+        changed = true;
+        break;
+      }
+
+      if (startsAtPageTop && height > pageContentHeight) continue;
+
+      element.before(createAutoPageBreak(nextContentStart - top, pageIndex + 2));
+      changed = true;
+      break;
+    }
+
+    if (!changed) break;
+  }
+
+  return calculatePageCount(editor);
 }
 
 export default function PageEditor() {
@@ -112,10 +248,18 @@ export default function PageEditor() {
   const currentPage = pages.find((page) => page.id === pageId);
   const canEdit = user?.role === "student" && book?.status !== "published";
 
+  const getCleanEditorHtml = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor) return content;
+    const clone = editor.cloneNode(true) as HTMLDivElement;
+    removeAutoPageBreakElements(clone);
+    return clone.innerHTML;
+  }, [content]);
+
   const updatePageCount = useCallback(() => {
     if (pageTimerRef.current) clearTimeout(pageTimerRef.current);
     pageTimerRef.current = setTimeout(() => {
-      setPageCount(calculatePageCount(editorRef.current));
+      setPageCount(normalizePageFlow(editorRef.current));
     }, 80);
   }, []);
 
@@ -193,7 +337,7 @@ export default function PageEditor() {
   };
 
   const syncEditorContent = () => {
-    const html = editorRef.current?.innerHTML ?? "";
+    const html = getCleanEditorHtml();
     dirtyRef.current = true;
     setContent(html);
     setWordCount(countWords(html));
@@ -204,7 +348,7 @@ export default function PageEditor() {
   const handleTitleChange = (newTitle: string) => {
     dirtyRef.current = true;
     setTitle(newTitle);
-    scheduleAutoSave(editorRef.current?.innerHTML ?? content, newTitle);
+    scheduleAutoSave(getCleanEditorHtml(), newTitle);
   };
 
   const normalizeDocumentFont = (nextFontSize: number) => {
@@ -224,7 +368,7 @@ export default function PageEditor() {
     dirtyRef.current = true;
     setFontSize(nextFontSize);
     normalizeDocumentFont(nextFontSize);
-    const html = editorRef.current?.innerHTML ?? content;
+    const html = getCleanEditorHtml();
     setContent(html);
     updatePageCount();
     scheduleAutoSave(html, title, nextFontSize);
@@ -316,8 +460,6 @@ export default function PageEditor() {
     );
   }
 
-  const breakMarkers = Array.from({ length: Math.max(0, pageCount - 1) });
-
   return (
     <div className="min-h-screen bg-[#eef4e3]">
       <div className="sticky top-0 z-50 border-b border-emerald-900/10 bg-white/95 shadow-sm backdrop-blur">
@@ -328,7 +470,7 @@ export default function PageEditor() {
                 variant="ghost"
                 size="icon"
                 onClick={async () => {
-                  await handleSave(editorRef.current?.innerHTML ?? content, title, false, fontSize);
+                  await handleSave(getCleanEditorHtml(), title, false, fontSize);
                   navigate(`/books/${bookId}/pages`);
                 }}
                 aria-label="Voltar"
@@ -346,7 +488,7 @@ export default function PageEditor() {
                 <Input
                   value={title}
                   onChange={(event) => handleTitleChange(event.target.value)}
-                  onBlur={() => canEdit && handleSave(editorRef.current?.innerHTML ?? content, title, false, fontSize)}
+                  onBlur={() => canEdit && handleSave(getCleanEditorHtml(), title, false, fontSize)}
                   readOnly={!canEdit}
                   placeholder="Titulo do livro ou capitulo"
                   className="h-auto min-w-0 border-0 bg-transparent p-0 text-xl font-bold text-emerald-950 shadow-none focus-visible:ring-0"
@@ -360,7 +502,7 @@ export default function PageEditor() {
               </div>
               {canEdit ? (
                 <Button
-                  onClick={() => handleSave(editorRef.current?.innerHTML ?? content, title, true, fontSize)}
+                  onClick={() => handleSave(getCleanEditorHtml(), title, true, fontSize)}
                   disabled={isSaving}
                   className="gap-2 bg-emerald-800 text-white hover:bg-emerald-900"
                 >
@@ -445,14 +587,12 @@ export default function PageEditor() {
             <div>
               <p className="flex items-center gap-2 text-sm font-bold text-emerald-950">
                 <FileText className="h-4 w-4" />
-                Escrita continua com corte de pagina
+                Documento do livro
               </p>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
-                Escreva no mesmo documento. Quando passar de uma pagina, aparece um corte e a proxima pagina continua embaixo.
-              </p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">Edição oficial com páginas automáticas, imagens e salvamento seguro.</p>
             </div>
             <Badge className="w-fit bg-emerald-100 text-emerald-950 hover:bg-emerald-100">
-              Imagens liberadas no livro
+              Livro em edição
             </Badge>
           </div>
         </div>
@@ -468,17 +608,6 @@ export default function PageEditor() {
               } as CSSProperties
             }
           >
-            <div className="pointer-events-none absolute inset-x-0 top-0 z-20">
-              {breakMarkers.map((_, index) => (
-                <div
-                  key={index}
-                  className="lumi-inline-page-break"
-                  style={{ top: `${(index + 1) * PAGE_HEIGHT + index * PAGE_GAP}px` }}
-                >
-                  <span>pagina {index + 2}</span>
-                </div>
-              ))}
-            </div>
             <div
               ref={editorRef}
               contentEditable={canEdit}
@@ -488,10 +617,10 @@ export default function PageEditor() {
               onKeyUp={rememberSelection}
               onMouseUp={rememberSelection}
               onFocus={rememberSelection}
-              onBlur={() => canEdit && handleSave(editorRef.current?.innerHTML ?? content, title, false, fontSize)}
+              onBlur={() => canEdit && handleSave(getCleanEditorHtml(), title, false, fontSize)}
               className="lumi-page-stack-editor prose prose-slate max-w-none outline-none empty:before:text-slate-400 empty:before:content-[attr(data-placeholder)]"
-              style={{ fontSize, minHeight: `${pageCount * PAGE_HEIGHT + Math.max(0, pageCount - 1) * PAGE_GAP}px` }}
-              data-placeholder="Comece a escrever. A proxima pagina aparece automaticamente quando o texto crescer."
+              style={{ fontSize, minHeight: `${PAGE_HEIGHT}px` }}
+              data-placeholder="Comece a escrever seu livro."
             />
           </div>
         </div>
