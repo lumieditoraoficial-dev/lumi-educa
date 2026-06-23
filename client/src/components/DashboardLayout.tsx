@@ -21,7 +21,9 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/useMobile";
-import { Bell, BookOpen, LayoutDashboard, Library, LogOut, MessageCircle, PanelLeft, Settings, UserRound, Users } from "lucide-react";
+import { getSchoolLabel } from "@/lib/schools";
+import { useSelectedSchoolFilter } from "@/lib/selectedSchool";
+import { Bell, BookOpen, Building2, LayoutDashboard, Library, LogOut, MessageCircle, PanelLeft, Repeat2, Server, Settings, UserRound, Users } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -121,6 +123,8 @@ function DashboardLayoutContent({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const lastHeartbeatRef = useRef(0);
   const isMobile = useIsMobile();
+  const { schoolFilter } = useSelectedSchoolFilter();
+  const showSchoolSwitcher = user?.role && user.role !== "student";
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: dashboardByRole[user?.role ?? "student"] ?? "/dashboard/student" },
     ...(user?.role === "student"
@@ -135,6 +139,9 @@ function DashboardLayoutContent({
     { icon: Library, label: "Biblioteca", path: "/library" },
     ...(user?.role === "admin"
       ? [{ icon: Settings, label: "Administração", path: "/dashboard/admin" }]
+      : []),
+    ...(user?.role === "admin"
+      ? [{ icon: Server, label: "Status", path: "/status" }]
       : []),
   ];
   const activeMenuItem = menuItems.find(item => item.path === location);
@@ -358,6 +365,25 @@ function DashboardLayoutContent({
             </div>
           </div>
         )}
+        {showSchoolSwitcher ? (
+          <div className="sticky top-0 z-30 border-b bg-white/88 px-4 py-3 backdrop-blur md:px-6">
+            <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3 text-sm text-slate-700">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#0F3D2E] text-white">
+                  <Building2 className="h-4 w-4" />
+                </span>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Escola selecionada</p>
+                  <p className="font-semibold text-slate-950">{schoolFilter === "all" ? "Nenhuma escola escolhida" : getSchoolLabel(schoolFilter)}</p>
+                </div>
+              </div>
+              <Button variant="outline" className="gap-2" onClick={() => setLocation("/select-school")}>
+                <Repeat2 className="h-4 w-4" />
+                Trocar escola
+              </Button>
+            </div>
+          </div>
+        ) : null}
         <main className="flex-1 p-4 md:p-6">
           <div className="mx-auto w-full max-w-[1440px]">{children}</div>
         </main>

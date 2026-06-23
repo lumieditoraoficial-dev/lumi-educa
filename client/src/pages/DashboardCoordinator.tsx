@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { buildClassInsights, buildStudentInsights, formatLastAccess, formatScore, isWeekend, toDate } from "@/lib/insights";
 import { ALL_SCHOOLS, SCHOOL_OPTIONS, type SchoolFilter, getSchoolLabel, matchesSchool, normalizeSchoolId } from "@/lib/schools";
+import { useSelectedSchoolFilter } from "@/lib/selectedSchool";
 import { trpc } from "@/lib/trpc";
 import { Activity, AlertTriangle, BarChart3, BookOpen, CheckCircle, Eye, TrendingUp, Users, Wifi, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -27,7 +28,7 @@ export default function DashboardCoordinator() {
   const utils = trpc.useUtils();
   const [feedbackByBook, setFeedbackByBook] = useState<Record<number, string>>({});
   const [scoreByBook, setScoreByBook] = useState<Record<number, string>>({});
-  const [schoolFilter, setSchoolFilter] = useState<SchoolFilter>(ALL_SCHOOLS);
+  const { schoolFilter, setSchoolFilter } = useSelectedSchoolFilter();
   const [now, setNow] = useState(() => new Date());
   const { data: rawBooks = [], isLoading } = trpc.books.listBooks.useQuery(undefined, { refetchInterval: 30_000 });
   const { data: rawStudents = [] } = trpc.users.listStudents.useQuery(undefined, { refetchInterval: 15_000 });

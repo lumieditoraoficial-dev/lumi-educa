@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ALL_SCHOOLS, SCHOOL_OPTIONS, type SchoolFilter, getSchoolLabel, matchesSchool } from "@/lib/schools";
+import { useSelectedSchoolFilter } from "@/lib/selectedSchool";
 import { trpc } from "@/lib/trpc";
 import { BookOpen, Download, ExternalLink, Eye, FileText, Search, ShieldCheck, UserRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -44,7 +45,7 @@ export default function AdminBookObserver() {
   const { data: books = [], isLoading } = trpc.books.listBooks.useQuery();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [schoolFilter, setSchoolFilter] = useState<SchoolFilter>(ALL_SCHOOLS);
+  const { schoolFilter, setSchoolFilter } = useSelectedSchoolFilter();
   const [selectedBookId, setSelectedBookId] = useState<number | null>(null);
 
   const authorsById = useMemo(() => {

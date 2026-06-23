@@ -54,7 +54,7 @@ export default function Login() {
     onSuccess: async (data) => {
       toast.success("Login realizado com sucesso.");
       localStorage.setItem("user", JSON.stringify(data.user));
-      navigate(roleDashboard[data.user.role as Role] ?? "/dashboard/student");
+      navigate(data.user.role === "student" ? roleDashboard.student : "/select-school");
     },
     onError: (error) => {
       toast.error(error.message || "Erro ao fazer login");

@@ -2,7 +2,8 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SCHOOL_OPTIONS, normalizeSchoolId } from "@/lib/schools";
+import { useSelectedSchoolFilter } from "@/lib/selectedSchool";
+import { ALL_SCHOOLS, SCHOOL_OPTIONS, getSchoolLabel, matchesSchool, normalizeSchoolId } from "@/lib/schools";
 import { trpc } from "@/lib/trpc";
 import { Activity, ArrowLeft, BookOpen, Database, Eye, Settings, ShieldCheck, Trophy, Users } from "lucide-react";
 import { useState } from "react";
@@ -16,6 +17,7 @@ type AdminPage = "overview" | "users" | "books" | "settings" | "database" | "act
 
 export default function DashboardAdmin() {
   const [currentPage, setCurrentPage] = useState<AdminPage>("overview");
+  const { schoolFilter } = useSelectedSchoolFilter();
   const { data: users = [] } = trpc.users.listUsers.useQuery();
   const { data: books = [] } = trpc.books.listBooks.useQuery();
 
@@ -46,9 +48,11 @@ export default function DashboardAdmin() {
     );
   }
 
-  const publishedBooks = books.filter((book) => book.status === "published");
-  const pendingBooks = books.filter((book) => ["submitted", "under_review", "approved"].includes(book.status));
   const userById = new Map(users.map((user) => [user.id, user]));
+  const scopedUsers = users.filter((user) => matchesSchool(user.schoolId, schoolFilter));
+  const scopedBooks = books.filter((book) => matchesSchool(userById.get(book.authorId)?.schoolId, schoolFilter));
+  const publishedBooks = scopedBooks.filter((book) => book.status === "published");
+  const pendingBooks = scopedBooks.filter((book) => ["submitted", "under_review", "approved"].includes(book.status));
   const schoolSummaries = SCHOOL_OPTIONS.map((school) => {
     const schoolUsers = users.filter((user) => normalizeSchoolId(user.schoolId) === school.id);
     const schoolBooks = books.filter((book) => normalizeSchoolId(userById.get(book.authorId)?.schoolId) === school.id);
@@ -60,7 +64,7 @@ export default function DashboardAdmin() {
       books: schoolBooks.length,
       published: schoolBooks.filter((book) => book.status === "published").length,
     };
-  });
+  }).filter((school) => schoolFilter === ALL_SCHOOLS || school.id === Number(schoolFilter));
 
   return (
     <DashboardLayout>
@@ -90,8 +94,8 @@ export default function DashboardAdmin() {
 
         <div className="grid gap-4 md:grid-cols-4">
           {[
-            { label: "Usuários reais", value: users.length, icon: Users },
-            { label: "Livros criados", value: books.length, icon: BookOpen },
+            { label: "Usuários reais", value: scopedUsers.length, icon: Users },
+            { label: "Livros criados", value: scopedBooks.length, icon: BookOpen },
             { label: "Pendências", value: pendingBooks.length, icon: Activity },
             { label: "Publicados", value: publishedBooks.length, icon: Database },
           ].map((stat) => {
@@ -199,12 +203,12 @@ export default function DashboardAdmin() {
             <CardTitle>Resumo de publicação</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {books.length === 0 ? (
+            {scopedBooks.length === 0 ? (
               <p className="rounded-lg border border-dashed p-8 text-center text-slate-600">
                 Sistema zerado: nenhum livro criado ainda.
               </p>
             ) : (
-              books.slice(0, 6).map((book) => (
+              scopedBooks.slice(0, 6).map((book) => (
                 <div key={book.id} className="flex items-center justify-between rounded-lg border p-3">
                   <div>
                     <p className="font-medium text-slate-950">{book.title}</p>

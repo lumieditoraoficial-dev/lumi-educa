@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ALL_SCHOOLS, SCHOOL_OPTIONS, type SchoolFilter, getSchoolLabel, matchesSchool, normalizeSchoolId } from "@/lib/schools";
+import { useSelectedSchoolFilter } from "@/lib/selectedSchool";
 import { trpc } from "@/lib/trpc";
 import {
   Award,
@@ -80,7 +81,7 @@ function readCover(file: File, onLoad: (value: string) => void) {
 
 export default function DashboardEditor() {
   const [selectedBookId, setSelectedBookId] = useState<number | null>(null);
-  const [schoolFilter, setSchoolFilter] = useState<SchoolFilter>(ALL_SCHOOLS);
+  const { schoolFilter, setSchoolFilter } = useSelectedSchoolFilter();
   const [goals, setGoals] = useState<EditorGoals>(() => {
     try {
       const saved = localStorage.getItem(goalStorageKey);

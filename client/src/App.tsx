@@ -18,7 +18,9 @@ import Login from "./pages/Login";
 import Messages from "./pages/Messages";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
+import SelectSchool from "./pages/SelectSchool";
 import Signup from "./pages/Signup";
+import SystemStatus from "./pages/SystemStatus";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -26,6 +28,8 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/login"} component={Login} />
+      <Route path={"/select-school"} component={SelectSchool} />
+      <Route path={"/status"} component={SystemStatus} />
       <Route path={"/signup"} component={Signup} />
       <Route path={"/dashboard/student"} component={DashboardStudent} />
       <Route path={"/dashboard/educator"} component={DashboardEducator} />

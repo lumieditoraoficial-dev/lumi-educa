@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { dailyAccessStatus, formatLastAccess, hasAccessedToday, isOnlineNow, lastActivityAt } from "@/lib/insights";
 import { ALL_SCHOOLS, SCHOOL_OPTIONS, type SchoolFilter, getSchoolLabel, matchesSchool, normalizeSchoolId } from "@/lib/schools";
+import { useSelectedSchoolFilter } from "@/lib/selectedSchool";
 import { trpc } from "@/lib/trpc";
 import { Activity, Camera, Edit2, Loader2, Lock, Mail, Plus, Search, Trash2, User, UserCheck, UserX } from "lucide-react";
 import { toast } from "sonner";
@@ -93,7 +94,7 @@ export default function AdminManageUsers() {
   const [editingUser, setEditingUser] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newUser, setNewUser] = useState({ ...blankUser });
-  const [schoolFilter, setSchoolFilter] = useState<SchoolFilter>(ALL_SCHOOLS);
+  const { schoolFilter, setSchoolFilter } = useSelectedSchoolFilter();
   const [now, setNow] = useState(() => Date.now());
 
   const { data: users = [], isLoading, refetch } = trpc.users.listUsers.useQuery(undefined, {
