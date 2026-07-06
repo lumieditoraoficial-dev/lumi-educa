@@ -1,8 +1,8 @@
 export const ALL_SCHOOLS = "all";
 
 export const SCHOOL_OPTIONS = [
-  { id: 1, label: "Escola 1" },
-  { id: 2, label: "Escola 2" },
+  { id: 1, label: "Santissima Trindade" },
+  { id: 2, label: "Nova escola" },
 ] as const;
 
 export type SchoolFilter = typeof ALL_SCHOOLS | "1" | "2";
@@ -14,7 +14,7 @@ export function normalizeSchoolId(value: unknown) {
 
 export function getSchoolLabel(value: unknown) {
   const id = normalizeSchoolId(value);
-  return SCHOOL_OPTIONS.find((school) => school.id === id)?.label ?? "Escola 1";
+  return SCHOOL_OPTIONS.find((school) => school.id === id)?.label ?? "Santissima Trindade";
 }
 
 export function matchesSchool(value: unknown, filter: SchoolFilter) {

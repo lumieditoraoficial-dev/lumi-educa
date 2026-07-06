@@ -138,8 +138,8 @@ export default function BookPages({ bookId }: { bookId: number }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#eff7e9]">
-      <div className="border-b border-emerald-900/10 bg-white/95 backdrop-blur">
+    <div className="lumi-page-aura min-h-screen">
+      <div className="border-b border-emerald-900/10 bg-white/92 shadow-[0_12px_32px_rgba(15,61,46,0.07)] backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 md:flex-row md:items-center md:justify-between">
           <div className="flex items-start gap-4">
             <Button variant="outline" size="icon" onClick={() => navigate(backPath)} aria-label="Voltar" title="Voltar">
@@ -204,7 +204,7 @@ export default function BookPages({ bookId }: { bookId: number }) {
                   <Badge className="bg-white/15 text-white hover:bg-white/20">Corte automático</Badge>
                 </div>
               </div>
-              <div className="rounded-xl border border-white/15 bg-white/10 p-4 backdrop-blur">
+              <div className="rounded-lg border border-white/15 bg-white/10 p-4 backdrop-blur">
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="rounded-lg bg-white/12 p-3">
                     <p className="text-white/65">Folhas</p>

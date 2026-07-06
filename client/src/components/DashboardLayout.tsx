@@ -258,14 +258,14 @@ function DashboardLayoutContent({
       <div className="relative" ref={sidebarRef}>
         <Sidebar
           collapsible="icon"
-          className="border-r-0 bg-[#0F3D2E] text-[#F7F3E9]"
+          className="border-r-0 bg-[#08261e] text-[#F7F3E9] shadow-[18px_0_50px_rgba(15,61,46,0.14)]"
           disableTransition={isResizing}
         >
-          <SidebarHeader className="h-20 justify-center border-b border-white/10">
+          <SidebarHeader className="h-20 justify-center border-b border-white/10 bg-[#08261e]">
             <div className="flex items-center gap-3 px-2 transition-all w-full">
               <button
                 onClick={toggleSidebar}
-                className="h-9 w-9 flex items-center justify-center rounded-lg border border-white/10 bg-white/8 text-[#F7F3E9] transition-colors hover:bg-[#F4C430]/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] shrink-0"
+                className="h-9 w-9 flex items-center justify-center rounded-lg border border-white/12 bg-white/8 text-[#F7F3E9] transition-colors hover:bg-[#F4C430]/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] shrink-0"
                 aria-label="Toggle navigation"
               >
                 <PanelLeft className="h-4 w-4" />
@@ -278,9 +278,9 @@ function DashboardLayoutContent({
             </div>
           </SidebarHeader>
 
-          <SidebarContent className="gap-0 bg-[#0F3D2E]">
+          <SidebarContent className="gap-0 bg-[linear-gradient(180deg,#08261e,#0F3D2E_58%,#0a2c23)]">
             {!isCollapsed ? (
-              <div className="mx-3 mb-2 overflow-hidden rounded-lg border border-[#F4C430]/25 bg-[#123C8C]/25 text-[#F7F3E9]">
+              <div className="mx-3 mb-3 overflow-hidden rounded-lg border border-[#F4C430]/24 bg-white/[0.075] text-[#F7F3E9] shadow-[0_16px_34px_rgba(0,0,0,0.16)]">
                 <div className="relative p-3">
                   <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full border-[16px] border-[#F4C430]/15" />
                   <div className="relative flex items-center gap-3">
@@ -292,7 +292,7 @@ function DashboardLayoutContent({
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[0.64rem] font-semibold uppercase tracking-[0.22em] text-[#F4C430]">Copa da Escrita</p>
+                      <p className="text-[0.64rem] font-semibold uppercase tracking-[0.22em] text-[#F4C430]">Ambiente escolar</p>
                       <p className="mt-1 truncate text-sm font-bold text-white">{selectedSchoolName}</p>
                       <p className="truncate text-xs text-white/58">{selectedSchoolLocation}</p>
                     </div>
@@ -309,8 +309,8 @@ function DashboardLayoutContent({
                       isActive={isActive}
                       onClick={() => setLocation(item.path)}
                       tooltip={item.label}
-                      className={`h-11 rounded-lg font-medium text-[#F7F3E9]/82 transition-all hover:bg-white/10 hover:text-white ${
-                        isActive ? "bg-[#F4C430] text-[#0F3D2E] shadow-sm hover:bg-[#F4C430] hover:text-[#0F3D2E]" : ""
+                      className={`h-11 rounded-lg font-semibold text-[#F7F3E9]/82 transition-all hover:bg-white/10 hover:text-white ${
+                        isActive ? "bg-[#F4C430] text-[#0F3D2E] shadow-[0_8px_18px_rgba(244,196,48,0.18)] hover:bg-[#F4C430] hover:text-[#0F3D2E]" : ""
                       }`}
                     >
                       <item.icon
@@ -324,7 +324,7 @@ function DashboardLayoutContent({
             </SidebarMenu>
           </SidebarContent>
 
-          <SidebarFooter className="border-t border-white/10 bg-[#0A2C23] p-3">
+          <SidebarFooter className="border-t border-white/10 bg-[#061d17] p-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-3 rounded-lg px-1 py-1 text-[#F7F3E9] transition-colors w-full text-left hover:bg-white/10 group-data-[collapsible=icon]:justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430]">
@@ -401,7 +401,7 @@ function DashboardLayoutContent({
           </div>
         )}
         {user ? (
-          <div className="sticky top-0 z-30 border-b border-[#0F3D2E]/10 bg-white/88 px-4 py-3 backdrop-blur md:px-6">
+          <div className="sticky top-0 z-30 border-b border-[#0F3D2E]/10 bg-white/90 px-4 py-3 shadow-[0_10px_30px_rgba(15,61,46,0.06)] backdrop-blur md:px-6">
             <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 items-center gap-3 text-sm text-slate-700">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#0F3D2E]/10 bg-[#0F3D2E] text-white shadow-sm">
@@ -420,7 +420,7 @@ function DashboardLayoutContent({
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#F4C430]/45 bg-[#fff8d7] px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-[#0F3D2E]">
                   <Trophy className="h-3.5 w-3.5" />
-                  Tema Brasil
+                  Rotina ativa
                 </span>
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#0F3D2E]/10 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
                   <GraduationCap className="h-3.5 w-3.5 text-[#266B3D]" />

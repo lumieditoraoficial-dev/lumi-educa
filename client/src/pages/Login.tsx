@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
-import { BookOpen, CheckCircle2, GraduationCap, Lock, Mail, ShieldCheck, Sparkles, Trophy, UserCog, Users } from "lucide-react";
+import { BookOpen, Building2, GraduationCap, Lock, Mail, ShieldCheck, Sparkles, UserCog, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -80,8 +80,8 @@ export default function Login() {
 
   return (
     <div className="lumi-hero-stage relative min-h-screen overflow-hidden text-white">
-      <div className="absolute inset-0 bg-cover bg-center opacity-[0.35]" style={{ backgroundImage: "url('/lumi-hero-dashboard.jpg')" }} />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(4,24,19,0.9),rgba(7,48,31,0.76)_48%,rgba(8,24,54,0.64))]" />
+      <div className="absolute inset-0 bg-cover bg-center opacity-[0.42]" style={{ backgroundImage: "url('/lumi-hero-dashboard.jpg')" }} />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(4,20,16,0.92),rgba(7,48,31,0.8)_48%,rgba(8,24,54,0.72))]" />
 
       <div className="relative mx-auto grid min-h-screen max-w-7xl items-center gap-10 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_31rem] lg:px-8">
         <section className="pt-10 lg:pt-0">
@@ -97,23 +97,30 @@ export default function Login() {
             <p className="inline-flex rounded-full border border-[#F4C430]/45 bg-[#F4C430]/14 px-4 py-2 text-sm font-bold uppercase tracking-[0.22em] text-[#F4C430]">
               Portal da escola
             </p>
-            <h1 className="mt-5 text-5xl font-black leading-tight tracking-normal sm:text-6xl">
-              Entre na sua jornada de escrita.
+            <h1 className="mt-5 max-w-3xl text-5xl font-black leading-tight tracking-normal sm:text-6xl">
+              Acesse sua escola e continue sua obra.
             </h1>
             <p className="mt-6 max-w-2xl text-xl leading-8 text-white/80">
-              Sua conta abre o painel da escola, com escrita, avaliacao, biblioteca, metas e comunicados em um unico ambiente.
+              Escrita, feedback, notas, metas e biblioteca em um unico ambiente oficial.
             </p>
             <div className="mt-8 max-w-2xl border-l-4 border-[#F4C430] pl-5">
               <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#F4C430]">Inspiracao</p>
               <p className="mt-2 text-lg leading-7 text-white">{motivationalQuotes[quoteIndex]}</p>
             </div>
             <div className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
-              {["Escola no topo", "Notas e metas", "Livro em PDF"].map((item) => (
-                <div key={item} className="rounded-lg border border-white/14 bg-white/10 p-3 text-sm font-bold backdrop-blur">
-                  <CheckCircle2 className="mb-2 h-5 w-5 text-[#F4C430]" />
-                  {item}
-                </div>
-              ))}
+              {[
+                { label: "Escola", icon: Building2 },
+                { label: "Escrita", icon: BookOpen },
+                { label: "Acompanhamento", icon: ShieldCheck },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.label} className="rounded-lg border border-white/14 bg-white/10 p-3 text-sm font-bold backdrop-blur">
+                    <Icon className="mb-2 h-5 w-5 text-[#F4C430]" />
+                    {item.label}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -124,8 +131,8 @@ export default function Login() {
               <div className="flex items-start justify-between gap-4">
                 <BrandLogo compact />
                 <span className="inline-flex items-center gap-2 rounded-full bg-[#fff8d7] px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-[#0F3D2E]">
-                  <Trophy className="h-3.5 w-3.5" />
-                  Brasil
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Oficial
                 </span>
               </div>
               <div>

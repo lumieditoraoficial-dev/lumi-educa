@@ -76,12 +76,23 @@ export const usersRouter = router({
         }
       }
 
-      if (input.assignedEducatorId !== undefined && input.assignedEducatorId !== null) {
-        const allUsers = await listUsers();
-        const targetUser = allUsers.find((user) => user.id === input.userId);
-        const educator = allUsers.find((user) => user.id === input.assignedEducatorId && user.role === "educator");
-        if (!targetUser || !educator || !sameSchool({ schoolId: input.schoolId ?? targetUser.schoolId }, educator)) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Aluno e educador precisam ser da mesma escola." });
+      const allUsers = await listUsers();
+      const targetUser = allUsers.find((user) => user.id === input.userId);
+      if (!targetUser) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Usuario nao encontrado." });
+      }
+
+      const nextSchoolId = input.schoolId === undefined ? normalizeSchoolId(targetUser.schoolId) : normalizeSchoolId(input.schoolId);
+      let nextAssignedEducatorId =
+        input.assignedEducatorId === undefined ? targetUser.assignedEducatorId : input.assignedEducatorId;
+
+      if (nextAssignedEducatorId !== undefined && nextAssignedEducatorId !== null) {
+        const educator = allUsers.find((user) => user.id === nextAssignedEducatorId && user.role === "educator");
+        if (!educator || !sameSchool({ schoolId: nextSchoolId }, educator)) {
+          if (input.assignedEducatorId !== undefined) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "Aluno e educador precisam ser da mesma escola." });
+          }
+          nextAssignedEducatorId = null;
         }
       }
 
@@ -90,9 +101,11 @@ export const usersRouter = router({
         ...(input.email !== undefined ? { email: input.email.toLowerCase() } : {}),
         ...(input.role !== undefined ? { role: input.role } : {}),
         ...(input.avatarUrl !== undefined ? { avatarUrl: input.avatarUrl } : {}),
-        ...(input.schoolId !== undefined ? { schoolId: normalizeSchoolId(input.schoolId) } : {}),
+        ...(input.schoolId !== undefined ? { schoolId: nextSchoolId } : {}),
         ...(input.className !== undefined ? { className: input.className } : {}),
-        ...(input.assignedEducatorId !== undefined ? { assignedEducatorId: input.assignedEducatorId } : {}),
+        ...(input.assignedEducatorId !== undefined || nextAssignedEducatorId !== targetUser.assignedEducatorId
+          ? { assignedEducatorId: nextAssignedEducatorId ?? null }
+          : {}),
         ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
         updatedAt: new Date(),
       };

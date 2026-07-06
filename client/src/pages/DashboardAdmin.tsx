@@ -84,8 +84,8 @@ export default function DashboardAdmin() {
               <div className="flex items-center gap-3">
                 <Trophy className="h-8 w-8 text-[#F4C430]" />
                 <div>
-                  <p className="text-sm text-white/65">Temporada</p>
-                  <p className="text-xl font-bold">Brasil da escrita</p>
+                  <p className="text-sm text-white/65">Acompanhamento</p>
+                  <p className="text-xl font-bold">Rede ativa</p>
                 </div>
               </div>
             </div>
@@ -94,7 +94,7 @@ export default function DashboardAdmin() {
 
         <div className="grid gap-4 md:grid-cols-4">
           {[
-            { label: "Usuários reais", value: scopedUsers.length, icon: Users },
+            { label: "Usuarios", value: scopedUsers.length, icon: Users },
             { label: "Livros criados", value: scopedBooks.length, icon: BookOpen },
             { label: "Pendências", value: pendingBooks.length, icon: Activity },
             { label: "Publicados", value: publishedBooks.length, icon: Database },
@@ -120,20 +120,20 @@ export default function DashboardAdmin() {
               <CardHeader>
                 <CardTitle>{school.label}</CardTitle>
               </CardHeader>
-              <CardContent className="grid gap-3 sm:grid-cols-4">
-                <div>
+              <CardContent className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg border border-[#0F3D2E]/8 bg-white/70 p-3">
                   <p className="text-sm text-slate-600">Alunos</p>
                   <p className="text-2xl font-bold text-slate-950">{school.students}</p>
                 </div>
-                <div>
+                <div className="rounded-lg border border-[#0F3D2E]/8 bg-white/70 p-3">
                   <p className="text-sm text-slate-600">Educadores</p>
                   <p className="text-2xl font-bold text-slate-950">{school.educators}</p>
                 </div>
-                <div>
+                <div className="rounded-lg border border-[#0F3D2E]/8 bg-white/70 p-3">
                   <p className="text-sm text-slate-600">Livros</p>
                   <p className="text-2xl font-bold text-slate-950">{school.books}</p>
                 </div>
-                <div>
+                <div className="rounded-lg border border-[#0F3D2E]/8 bg-white/70 p-3">
                   <p className="text-sm text-slate-600">Publicados</p>
                   <p className="text-2xl font-bold text-emerald-700">{school.published}</p>
                 </div>
@@ -205,7 +205,7 @@ export default function DashboardAdmin() {
           <CardContent className="space-y-3">
             {scopedBooks.length === 0 ? (
               <p className="rounded-lg border border-dashed p-8 text-center text-slate-600">
-                Sistema zerado: nenhum livro criado ainda.
+                Nenhum livro criado ainda.
               </p>
             ) : (
               scopedBooks.slice(0, 6).map((book) => (

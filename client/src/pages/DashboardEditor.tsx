@@ -269,6 +269,8 @@ export default function DashboardEditor() {
 
   const selectedInsight = selectedBook ? getAiInsight(selectedBook) : null;
   const selectedAverageScore = selectedBook ? getAverageScore(selectedBook.id) : null;
+  const monthlyReportUrl =
+    schoolFilter === ALL_SCHOOLS ? "/api/reports/monthly.pdf" : `/api/reports/monthly.pdf?schoolId=${schoolFilter}`;
 
   return (
     <DashboardLayout>
@@ -359,7 +361,7 @@ export default function DashboardEditor() {
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button variant="outline" asChild>
-                  <a href="/api/reports/monthly.pdf">
+                  <a href={monthlyReportUrl}>
                     <FileDown className="mr-2 h-4 w-4" />
                     Baixar PDF mensal
                   </a>

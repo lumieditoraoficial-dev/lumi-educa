@@ -128,9 +128,9 @@ function cloneBareTextBlock(element: HTMLElement, text: string) {
 function splitPlainTextBlock(element: HTMLElement, contentEnd: number, nextContentStart: number, nextPageNumber: number) {
   const tagName = element.tagName.toLowerCase();
   if (!["p", "div", "li"].includes(tagName)) return false;
-  if (element.children.length > 0) return false;
 
   const originalText = element.textContent ?? "";
+  const originalHtml = element.innerHTML;
   if (originalText.trim().length < 80) return false;
 
   let low = 12;
@@ -151,7 +151,7 @@ function splitPlainTextBlock(element: HTMLElement, contentEnd: number, nextConte
   }
 
   if (best < 24 || best >= originalText.length - 24) {
-    element.textContent = originalText;
+    element.innerHTML = originalHtml;
     return false;
   }
 
@@ -161,7 +161,7 @@ function splitPlainTextBlock(element: HTMLElement, contentEnd: number, nextConte
   const secondPart = originalText.slice(splitIndex).trimStart();
 
   if (!firstPart || !secondPart) {
-    element.textContent = originalText;
+    element.innerHTML = originalHtml;
     return false;
   }
 
@@ -461,8 +461,8 @@ export default function PageEditor() {
   }
 
   return (
-    <div className="min-h-screen bg-[#eef4e3]">
-      <div className="sticky top-0 z-50 border-b border-emerald-900/10 bg-white/95 shadow-sm backdrop-blur">
+    <div className="lumi-page-aura min-h-screen">
+      <div className="sticky top-0 z-50 border-b border-emerald-900/10 bg-white/94 shadow-[0_14px_38px_rgba(15,61,46,0.08)] backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex min-w-0 items-center gap-3">
@@ -480,7 +480,7 @@ export default function PageEditor() {
               </Button>
               <div className="min-w-0">
                 <div className="mb-1 flex flex-wrap items-center gap-2">
-                  <Badge className="bg-emerald-900 text-white">Editor do livro</Badge>
+                  <Badge className="bg-emerald-900 text-white">Documento oficial</Badge>
                   <Badge variant="secondary" className="bg-yellow-100 text-emerald-950">
                     {pageCount} pagina{pageCount === 1 ? "" : "s"}
                   </Badge>
@@ -496,7 +496,7 @@ export default function PageEditor() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <div className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-950">
+              <div className="rounded-full border border-emerald-900/10 bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-950">
                 {wordCount} palavras
                 {isSaving ? " | salvando" : lastSavedAt ? ` | salvo ${lastSavedAt.toLocaleTimeString("pt-BR")}` : ""}
               </div>
@@ -515,7 +515,7 @@ export default function PageEditor() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-900/10 bg-gradient-to-r from-white via-emerald-50 to-yellow-50 p-2">
+          <div className="lumi-command-bar flex flex-wrap items-center gap-2 rounded-lg p-2">
             {[
               { label: "Desfazer", icon: Undo2, command: "undo" },
               { label: "Refazer", icon: Redo2, command: "redo" },
@@ -582,14 +582,14 @@ export default function PageEditor() {
       </div>
 
       <main className="mx-auto max-w-6xl px-4 py-8">
-        <div className="mb-4 rounded-2xl border border-emerald-900/10 bg-white/90 p-5 shadow-sm">
+        <div className="mb-4 rounded-lg border border-emerald-900/10 bg-white/92 p-5 shadow-[0_14px_36px_rgba(15,61,46,0.07)]">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="flex items-center gap-2 text-sm font-bold text-emerald-950">
+              <p className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.14em] text-emerald-950">
                 <FileText className="h-4 w-4" />
                 Documento do livro
               </p>
-              <p className="mt-1 text-sm leading-6 text-slate-600">Edição oficial com páginas automáticas, imagens e salvamento seguro.</p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">Escreva em fluxo continuo. O corte de pagina aparece sozinho durante a escrita.</p>
             </div>
             <Badge className="w-fit bg-emerald-100 text-emerald-950 hover:bg-emerald-100">
               Livro em edição

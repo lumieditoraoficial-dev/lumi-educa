@@ -22,7 +22,7 @@ export default function Library() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F8F7EB]">
+    <div className="lumi-page-aura min-h-screen">
       <div className="lumi-cup-surface lumi-field-lines relative overflow-hidden px-4 py-14 text-white sm:px-6 lg:px-8">
         <div className="absolute bottom-0 right-0 h-44 w-72 bg-[#266B3D]" style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%, 40% 46%)" }} />
         <div className="absolute bottom-0 right-0 h-36 w-52 bg-[#F4C430]" style={{ clipPath: "polygon(100% 0, 100% 100%, 26% 100%, 0 50%)" }} />
@@ -34,11 +34,11 @@ export default function Library() {
           <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
             <div>
               <p className="mb-3 inline-flex rounded-full border border-[#F4C430]/40 bg-[#F4C430]/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#F4C430]">
-                Arquibancada literária
+                Biblioteca oficial
               </p>
-              <h1 className="text-4xl font-semibold tracking-normal">Biblioteca Digital</h1>
+              <h1 className="text-4xl font-black tracking-normal md:text-5xl">Biblioteca Digital</h1>
               <p className="mt-2 max-w-2xl text-[#F7F3E9]/85">
-                Leia as obras publicadas depois da revisao pedagogica e acompanhe os destaques da temporada.
+                Leia as obras aprovadas, publicadas e organizadas pela escola.
               </p>
             </div>
             <div className="rounded-lg border border-white/16 bg-white/10 p-4 backdrop-blur">
@@ -54,9 +54,9 @@ export default function Library() {
         </div>
       </div>
 
-      <div className="sticky top-0 z-30 border-b border-[#0F3D2E]/10 bg-white/95 backdrop-blur">
+      <div className="sticky top-0 z-30 border-b border-[#0F3D2E]/10 bg-white/92 shadow-[0_12px_32px_rgba(15,61,46,0.06)] backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="lumi-command-bar grid grid-cols-1 gap-4 rounded-lg p-3 md:grid-cols-4">
             <div className="md:col-span-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
@@ -111,7 +111,7 @@ export default function Library() {
               if (!book) return null;
 
               return (
-                <Card key={pub.id} className="lumi-cup-card overflow-hidden rounded-lg transition-transform hover:-translate-y-1 hover:shadow-xl">
+                <Card key={pub.id} className="lumi-premium-card overflow-hidden rounded-lg transition-transform hover:-translate-y-1 hover:shadow-xl">
                   {book.coverImageUrl ? (
                     <div className="flex h-48 items-center justify-center bg-gradient-to-br from-[#0F3D2E] via-[#123C8C] to-[#F4C430]">
                       <img src={book.coverImageUrl} alt={book.title} className="h-full w-full object-cover" />

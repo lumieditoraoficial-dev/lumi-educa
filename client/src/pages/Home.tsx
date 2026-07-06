@@ -1,6 +1,6 @@
 import BrandLogo from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BookOpen, CalendarDays, Library, LockKeyhole } from "lucide-react";
+import { ArrowRight, BookOpen, Building2, Library, LockKeyhole, PenLine, ShieldCheck, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 
@@ -13,23 +13,29 @@ const quotes = [
 
 const accessCards = [
   {
-    title: "Conta escolar",
+    title: "Entrar na plataforma",
     label: "Entrar",
     path: "/login",
     icon: LockKeyhole,
   },
   {
     title: "Biblioteca digital",
-    label: "Abrir",
+    label: "Ler obras",
     path: "/library",
     icon: Library,
   },
   {
-    title: "Status do ambiente",
-    label: "Ver status",
-    path: "/status",
-    icon: CalendarDays,
+    title: "Area da escola",
+    label: "Acesso oficial",
+    path: "/login",
+    icon: Building2,
   },
+];
+
+const officialFlow = [
+  { label: "Escrita", detail: "livros, paginas e imagens", icon: PenLine },
+  { label: "Acompanhamento", detail: "notas, feedbacks e metas", icon: ShieldCheck },
+  { label: "Publicacao", detail: "PDF e biblioteca digital", icon: BookOpen },
 ];
 
 export default function Home() {
@@ -46,7 +52,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#F8F7EB] text-[#0F3D2E]">
-      <nav className="fixed left-0 right-0 top-0 z-50 border-b border-white/12 bg-[#06271f]/58 backdrop-blur-xl">
+      <nav className="fixed left-0 right-0 top-0 z-50 border-b border-white/12 bg-[#06271f]/66 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <button type="button" onClick={() => navigate("/")} className="rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430]">
             <BrandLogo inverted compact />
@@ -64,11 +70,11 @@ export default function Home() {
 
       <main>
         <section className="lumi-hero-stage relative isolate min-h-screen text-[#F7F3E9]">
-          <div className="absolute inset-0 bg-cover bg-center opacity-[0.42]" style={{ backgroundImage: "url('/lumi-hero-dashboard.jpg')" }} />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(4,20,16,0.9),rgba(6,36,25,0.78)_48%,rgba(5,20,45,0.6))]" />
+          <div className="absolute inset-0 bg-cover bg-center opacity-[0.46]" style={{ backgroundImage: "url('/lumi-hero-dashboard.jpg')" }} />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,16,13,0.92),rgba(6,36,25,0.8)_48%,rgba(5,20,45,0.68))]" />
 
           <div className="relative mx-auto flex min-h-screen max-w-7xl items-center px-4 pb-12 pt-24 sm:px-6 lg:px-8">
-            <div className="grid w-full gap-10 lg:grid-cols-[minmax(0,1fr)_25rem] lg:items-center">
+            <div className="grid w-full gap-10 lg:grid-cols-[minmax(0,1fr)_28rem] lg:items-center">
               <section className="max-w-4xl">
                 <div className="mb-7">
                   <BrandLogo inverted showTagline />
@@ -76,11 +82,11 @@ export default function Home() {
                 <p className="mb-5 inline-flex rounded-full border border-[#F4C430]/48 bg-[#F4C430]/14 px-4 py-2 text-sm font-bold uppercase tracking-[0.22em] text-[#F4C430]">
                   Portal oficial
                 </p>
-                <h1 className="text-5xl font-black leading-[0.98] tracking-normal sm:text-6xl lg:text-7xl">
+                <h1 className="max-w-4xl text-5xl font-black leading-[0.98] tracking-normal sm:text-6xl lg:text-7xl">
                   Lumi Educa
                 </h1>
                 <p className="mt-6 max-w-2xl text-xl leading-8 text-[#F7F3E9]/88">
-                  Acesse sua escola, continue seus livros, acompanhe orientacoes e leia as publicacoes da biblioteca digital.
+                  Um ambiente escolar para transformar escrita em livro, acompanhar desempenho e celebrar a autoria dos alunos.
                 </p>
 
                 <div className="mt-8 min-h-[4.5rem] max-w-2xl border-l-4 border-[#F4C430] pl-5">
@@ -102,13 +108,26 @@ export default function Home() {
                     Biblioteca digital
                   </Button>
                 </div>
+
+                <div className="mt-8 grid max-w-3xl gap-3 sm:grid-cols-3">
+                  {officialFlow.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <div key={item.label} className="rounded-lg border border-white/14 bg-white/10 p-4 backdrop-blur">
+                        <Icon className="h-5 w-5 text-[#F4C430]" />
+                        <p className="mt-3 font-black text-white">{item.label}</p>
+                        <p className="mt-1 text-sm leading-5 text-white/68">{item.detail}</p>
+                      </div>
+                    );
+                  })}
+                </div>
               </section>
 
               <aside className="lumi-glass-panel rounded-lg p-5">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-sm uppercase tracking-[0.2em] text-[#F4C430]">Acesso rapido</p>
-                    <h2 className="mt-2 text-2xl font-black text-white">Area da escola</h2>
+                    <h2 className="mt-2 text-2xl font-black text-white">Portal da escola</h2>
                   </div>
                   <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-[#F4C430] text-[#0F3D2E]">
                     <BookOpen className="h-7 w-7" />
@@ -141,8 +160,11 @@ export default function Home() {
                 </div>
 
                 <div className="mt-5 rounded-lg bg-[#F4C430] p-4 text-[#0F3D2E]">
-                  <p className="text-sm font-bold uppercase tracking-[0.16em]">Comunicado</p>
-                  <p className="mt-1 text-sm font-semibold leading-6">Use sua conta cadastrada pela escola. Em caso de dificuldade, procure a equipe responsavel.</p>
+                  <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.16em]">
+                    <Sparkles className="h-4 w-4" />
+                    Rotina de uso
+                  </p>
+                  <p className="mt-1 text-sm font-semibold leading-6">Entre todos os dias letivos para continuar sua escrita, acompanhar retornos e cumprir metas.</p>
                 </div>
               </aside>
             </div>

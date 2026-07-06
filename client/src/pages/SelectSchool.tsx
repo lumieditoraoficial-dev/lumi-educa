@@ -226,10 +226,10 @@ export default function SelectSchool() {
               Escolha a unidade escolar.
             </h1>
             <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-600">
-              Acesse dados, brasao, turmas, livros e acompanhamentos vinculados a escola selecionada.
+              Entre na unidade correta para ver turmas, alunos, livros, relatorios e identidade da escola.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
-              {["Escola", "Turmas", "Livros"].map((item) => (
+              {["Unidade", "Turmas", "Relatorios"].map((item) => (
                 <span key={item} className="rounded-full border border-[#0F3D2E]/10 bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-[#0F3D2E]">
                   {item}
                 </span>
@@ -252,7 +252,7 @@ export default function SelectSchool() {
                         )}
                       </div>
                       <div className="min-w-0 relative">
-                        <CardTitle className="truncate text-2xl font-black">{school.name}</CardTitle>
+                        <CardTitle className="text-xl font-black leading-tight text-white md:text-2xl">{school.name}</CardTitle>
                         <p className="mt-2 flex items-center gap-2 text-sm text-white/75">
                           <MapPin className="h-4 w-4 shrink-0" />
                           <span className="truncate">{school.location}</span>

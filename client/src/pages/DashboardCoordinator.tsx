@@ -9,7 +9,7 @@ import { buildClassInsights, buildStudentInsights, formatLastAccess, formatScore
 import { ALL_SCHOOLS, SCHOOL_OPTIONS, type SchoolFilter, getSchoolLabel, matchesSchool, normalizeSchoolId } from "@/lib/schools";
 import { useSelectedSchoolFilter } from "@/lib/selectedSchool";
 import { trpc } from "@/lib/trpc";
-import { Activity, AlertTriangle, BarChart3, BookOpen, CheckCircle, Eye, TrendingUp, Users, Wifi, XCircle } from "lucide-react";
+import { Activity, AlertTriangle, BarChart3, BookOpen, CheckCircle, Eye, FileDown, TrendingUp, Users, Wifi, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -64,6 +64,8 @@ export default function DashboardCoordinator() {
 
   const studentInsights = useMemo(() => buildStudentInsights(students, books, evaluations, now), [students, books, evaluations, now]);
   const classInsights = useMemo(() => buildClassInsights(studentInsights), [studentInsights]);
+  const monthlyReportUrl =
+    effectiveSchoolFilter === ALL_SCHOOLS ? "/api/reports/monthly.pdf" : `/api/reports/monthly.pdf?schoolId=${effectiveSchoolFilter}`;
 
   const pendingApproval = books.filter((book) => book.status === "under_review");
   const readyToPublish = books.filter((book) => book.status === "approved");
@@ -158,26 +160,34 @@ export default function DashboardCoordinator() {
           <p className="mt-2 text-slate-600">
             Monitore turmas, acesso diario, desempenho pedagogico e fluxo de aprovacao das obras.
           </p>
-          <div className="mt-4 w-full max-w-xs">
-            <Select
-              value={effectiveSchoolFilter}
-              onValueChange={(value: SchoolFilter) => {
-                if (canChooseSchools) setSchoolFilter(value);
-              }}
-              disabled={!canChooseSchools}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {canChooseSchools ? <SelectItem value={ALL_SCHOOLS}>Todas as escolas</SelectItem> : null}
-                {availableSchoolOptions.map((school) => (
-                  <SelectItem key={school.id} value={String(school.id)}>
-                    {school.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="w-full max-w-xs">
+              <Select
+                value={effectiveSchoolFilter}
+                onValueChange={(value: SchoolFilter) => {
+                  if (canChooseSchools) setSchoolFilter(value);
+                }}
+                disabled={!canChooseSchools}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {canChooseSchools ? <SelectItem value={ALL_SCHOOLS}>Todas as escolas</SelectItem> : null}
+                  {availableSchoolOptions.map((school) => (
+                    <SelectItem key={school.id} value={String(school.id)}>
+                      {school.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button variant="outline" asChild>
+              <a href={monthlyReportUrl}>
+                <FileDown className="mr-2 h-4 w-4" />
+                PDF pedagogico
+              </a>
+            </Button>
           </div>
         </div>
 
@@ -328,11 +338,12 @@ export default function DashboardCoordinator() {
                 </p>
               ) : (
                 classInsights.map((item) => (
-                  <div key={item.className} className="rounded-lg border p-4">
+                  <div key={item.key} className="rounded-lg border p-4">
                     <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
                       <div>
                         <p className="font-semibold text-slate-950">{item.className}</p>
                         <p className="text-sm text-slate-600">
+                          {effectiveSchoolFilter === ALL_SCHOOLS ? `${getSchoolLabel(item.schoolId)} - ` : ""}
                           {item.students} alunos - {item.books} livros - {item.pages} paginas
                         </p>
                       </div>
@@ -363,6 +374,14 @@ export default function DashboardCoordinator() {
                         <p className="text-xs text-slate-500">Alertas</p>
                         <p className="text-lg font-bold text-slate-950">{item.needsAttention}</p>
                       </div>
+                    </div>
+                    <div className="mt-3 flex justify-end">
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={`/api/reports/class/${encodeURIComponent(item.className)}.pdf?schoolId=${item.schoolId}`}>
+                          <FileDown className="mr-2 h-4 w-4" />
+                          PDF da turma
+                        </a>
+                      </Button>
                     </div>
                   </div>
                 ))

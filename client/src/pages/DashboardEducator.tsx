@@ -7,8 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { buildStudentInsights, formatLastAccess, formatScore, isWeekend } from "@/lib/insights";
-import { ALL_SCHOOLS, SCHOOL_OPTIONS, type SchoolFilter, matchesSchool } from "@/lib/schools";
-import { useSelectedSchoolFilter } from "@/lib/selectedSchool";
+import { SCHOOL_OPTIONS, type SchoolFilter, getSchoolLabel, matchesSchool, normalizeSchoolId } from "@/lib/schools";
 import { trpc } from "@/lib/trpc";
 import { AlertCircle, BookOpen, CheckCircle, Eye, Gauge, TrendingUp, UserCheck, Users, Wifi } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -28,25 +27,28 @@ export default function DashboardEducator() {
   const utils = trpc.useUtils();
   const [feedbackByBook, setFeedbackByBook] = useState<Record<number, string>>({});
   const [scoreByBook, setScoreByBook] = useState<Record<number, string>>({});
-  const { schoolFilter, setSchoolFilter } = useSelectedSchoolFilter();
   const [now, setNow] = useState(() => new Date());
   const { data: rawBooks = [], isLoading } = trpc.books.listBooks.useQuery(undefined, { refetchInterval: 30_000 });
   const { data: rawStudents = [] } = trpc.users.listStudents.useQuery(undefined, { refetchInterval: 15_000 });
   const { data: rawEvaluations = [] } = trpc.evaluations.listEvaluations.useQuery(undefined, { refetchInterval: 30_000 });
+  const { data: profile } = trpc.users.getProfile.useQuery();
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(new Date()), 15_000);
     return () => window.clearInterval(interval);
   }, []);
 
+  const effectiveSchoolFilter = String(normalizeSchoolId(profile?.schoolId)) as SchoolFilter;
+  const availableSchoolOptions = SCHOOL_OPTIONS.filter((school) => school.id === normalizeSchoolId(profile?.schoolId));
+
   const students = useMemo(
-    () => rawStudents.filter((student) => matchesSchool(student.schoolId, schoolFilter)),
-    [rawStudents, schoolFilter]
+    () => rawStudents.filter((student) => matchesSchool(student.schoolId, effectiveSchoolFilter)),
+    [rawStudents, effectiveSchoolFilter]
   );
   const studentById = useMemo(() => new Map(rawStudents.map((student) => [student.id, student])), [rawStudents]);
   const books = useMemo(
-    () => rawBooks.filter((book) => matchesSchool(studentById.get(book.authorId)?.schoolId, schoolFilter)),
-    [rawBooks, studentById, schoolFilter]
+    () => rawBooks.filter((book) => matchesSchool(studentById.get(book.authorId)?.schoolId, effectiveSchoolFilter)),
+    [rawBooks, studentById, effectiveSchoolFilter]
   );
   const bookIds = useMemo(() => new Set(books.map((book) => book.id)), [books]);
   const evaluations = useMemo(
@@ -110,19 +112,19 @@ export default function DashboardEducator() {
             Acompanhe acesso, desempenho, notas e producoes dos alunos antes da revisao final.
           </p>
           <div className="mt-4 w-full max-w-xs">
-            <Select value={schoolFilter} onValueChange={(value: SchoolFilter) => setSchoolFilter(value)}>
+            <Select value={effectiveSchoolFilter} disabled>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL_SCHOOLS}>Todas as escolas</SelectItem>
-                {SCHOOL_OPTIONS.map((school) => (
+                {availableSchoolOptions.map((school) => (
                   <SelectItem key={school.id} value={String(school.id)}>
                     {school.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <p className="mt-2 text-xs text-slate-500">Educador vinculado a {getSchoolLabel(effectiveSchoolFilter)}.</p>
           </div>
         </div>
 

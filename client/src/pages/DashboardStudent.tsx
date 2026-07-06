@@ -82,7 +82,7 @@ export default function DashboardStudent() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div className="lumi-brazil-panel rounded-2xl p-6 text-white shadow-xl md:p-8">
+        <div className="lumi-brazil-panel rounded-lg p-6 text-white shadow-xl md:p-8">
           <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_18rem] md:items-center">
             <div>
               <Badge className="bg-white/15 text-white hover:bg-white/20">Autoria jovem</Badge>
@@ -96,9 +96,9 @@ export default function DashboardStudent() {
                 <span className="rounded-full bg-white/12 px-3 py-1">Envio de paginas novas</span>
               </div>
             </div>
-            <div className="rounded-xl border border-white/15 bg-white/10 p-4 backdrop-blur">
+            <div className="rounded-lg border border-white/15 bg-white/10 p-4 backdrop-blur">
               <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-yellow-300 p-3 text-emerald-950">
+                <div className="rounded-lg bg-yellow-300 p-3 text-emerald-950">
                   <Sparkles className="h-6 w-6" />
                 </div>
                 <div>
@@ -111,7 +111,11 @@ export default function DashboardStudent() {
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="lumi-command-bar flex flex-col justify-between gap-3 rounded-lg p-4 sm:flex-row sm:items-center">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[0.16em] text-[#266B3D]">Biblioteca pessoal</p>
+            <p className="mt-1 text-sm text-slate-600">Crie livros, continue a escrita e acompanhe as devolutivas da equipe.</p>
+          </div>
           <Dialog open={isCreatingBook} onOpenChange={setIsCreatingBook}>
             <DialogTrigger asChild>
               <Button className="bg-emerald-800 hover:bg-emerald-900">

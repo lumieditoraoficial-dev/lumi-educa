@@ -258,8 +258,8 @@ export async function deleteUserById(userId: number) {
 const defaultSchools: Array<Omit<School, "createdAt" | "updatedAt">> = [
   {
     id: 1,
-    name: "Escola 1",
-    description: "Unidade principal",
+    name: "Santissima Trindade",
+    description: "Unidade principal Santissima Trindade",
     address: null,
     city: null,
     state: null,
@@ -267,8 +267,8 @@ const defaultSchools: Array<Omit<School, "createdAt" | "updatedAt">> = [
   },
   {
     id: 2,
-    name: "Escola 2",
-    description: "Segunda unidade",
+    name: "Nova escola",
+    description: "Segunda unidade escolar",
     address: null,
     city: null,
     state: null,
@@ -283,10 +283,19 @@ async function ensureDefaultSchools(db: NonNullable<Awaited<ReturnType<typeof ge
 
   if (missing.length > 0) {
     await db.insert(schools).values(missing).onConflictDoNothing();
-    return db.select().from(schools).orderBy(schools.id);
   }
 
-  return existing;
+  for (const school of defaultSchools) {
+    const current = existing.find((item) => item.id === school.id);
+    if (current?.name === `Escola ${school.id}`) {
+      await db
+        .update(schools)
+        .set({ name: school.name, description: school.description, updatedAt: new Date() })
+        .where(eq(schools.id, school.id));
+    }
+  }
+
+  return db.select().from(schools).orderBy(schools.id);
 }
 
 // Schools

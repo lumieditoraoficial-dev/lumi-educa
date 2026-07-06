@@ -153,8 +153,8 @@ function makeDefaultSchool(id: number): School {
   const now = new Date();
   return {
     id,
-    name: id === 1 ? "Escola 1" : "Escola 2",
-    description: id === 1 ? "Unidade principal" : "Segunda unidade",
+    name: id === 1 ? "Santissima Trindade" : "Nova escola",
+    description: id === 1 ? "Unidade principal Santissima Trindade" : "Segunda unidade escolar",
     address: null,
     city: null,
     state: null,
@@ -170,8 +170,11 @@ function ensureLocalSchools(data: LocalData) {
     if (!existing) {
       data.schools.push(makeDefaultSchool(schoolId));
     } else {
-      existing.name = existing.name || `Escola ${schoolId}`;
-      existing.description = existing.description ?? (schoolId === 1 ? "Unidade principal" : "Segunda unidade");
+      if (!existing.name || existing.name === `Escola ${schoolId}`) {
+        existing.name = schoolId === 1 ? "Santissima Trindade" : "Nova escola";
+      }
+      existing.description =
+        existing.description ?? (schoolId === 1 ? "Unidade principal Santissima Trindade" : "Segunda unidade escolar");
       existing.address = existing.address ?? null;
       existing.city = existing.city ?? null;
       existing.state = existing.state ?? null;

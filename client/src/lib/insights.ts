@@ -5,6 +5,7 @@ type AnyUser = {
   name?: string | null;
   email?: string | null;
   role?: string | null;
+  schoolId?: number | null;
   className?: string | null;
   assignedEducatorId?: number | null;
   isActive?: boolean | null;
@@ -173,19 +174,25 @@ export function buildClassInsights(studentInsights: ReturnType<typeof buildStude
 
   for (const item of studentInsights) {
     const className = item.student.className?.trim() || "Sem turma";
-    const current = groups.get(className) ?? [];
+    const schoolId = item.student.schoolId ?? 1;
+    const key = `${schoolId}::${className}`;
+    const current = groups.get(key) ?? [];
     current.push(item);
-    groups.set(className, current);
+    groups.set(key, current);
   }
 
   return Array.from(groups.entries())
-    .map(([className, items]) => {
+    .map(([key, items]) => {
       const scored = items.filter((item) => item.avgScore !== null);
       const avgScore = scored.length
         ? scored.reduce((sum, item) => sum + (item.avgScore ?? 0), 0) / scored.length
         : null;
+      const firstStudent = items[0]?.student;
+      const className = firstStudent?.className?.trim() || "Sem turma";
 
       return {
+        key,
+        schoolId: firstStudent?.schoolId ?? 1,
         className,
         students: items.length,
         online: items.filter((item) => item.online).length,
@@ -198,5 +205,8 @@ export function buildClassInsights(studentInsights: ReturnType<typeof buildStude
         pages: items.reduce((sum, item) => sum + item.totalPages, 0),
       };
     })
-    .sort((a, b) => a.className.localeCompare(b.className));
+    .sort((a, b) => {
+      if (a.schoolId !== b.schoolId) return Number(a.schoolId) - Number(b.schoolId);
+      return a.className.localeCompare(b.className);
+    });
 }
