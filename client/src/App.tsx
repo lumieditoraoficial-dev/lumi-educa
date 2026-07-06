@@ -10,6 +10,7 @@ import DashboardEducator from "./pages/DashboardEducator";
 import DashboardCoordinator from "./pages/DashboardCoordinator";
 import DashboardEditor from "./pages/DashboardEditor";
 import DashboardAdmin from "./pages/DashboardAdmin";
+import DashboardSchool from "./pages/DashboardSchool";
 import PageEditor from "./pages/PageEditor";
 import BookPages from "./pages/BookPages";
 import BookReader from "./pages/BookReader";
@@ -36,6 +37,7 @@ function Router() {
       <Route path={"/dashboard/coordinator"} component={DashboardCoordinator} />
       <Route path={"/dashboard/editor"} component={DashboardEditor} />
       <Route path={"/dashboard/admin"} component={DashboardAdmin} />
+      <Route path={"/dashboard/school"} component={DashboardSchool} />
       <Route path={"/messages"} component={Messages} />
       <Route path={"/notifications"} component={Notifications} />
       <Route path={"/profile"} component={Profile} />

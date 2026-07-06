@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useLocation } from "wouter";
 
 type Role = "student" | "educator" | "coordinator" | "editor" | "admin";
+type InternalAccess = Role | "schoolPortal";
 
 const roleDashboard: Record<Role, string> = {
   student: "/dashboard/student",
@@ -18,7 +19,8 @@ const roleDashboard: Record<Role, string> = {
   admin: "/dashboard/admin",
 };
 
-const roleOptions: Array<{ role: Role; label: string; icon: typeof GraduationCap }> = [
+const roleOptions: Array<{ role: InternalAccess; label: string; icon: typeof GraduationCap }> = [
+  { role: "schoolPortal", label: "Portal Escola", icon: Building2 },
   { role: "student", label: "Aluno", icon: GraduationCap },
   { role: "educator", label: "Educador", icon: BookOpen },
   { role: "coordinator", label: "Coordenador", icon: Users },
@@ -37,7 +39,7 @@ const motivationalQuotes = [
 export default function Login() {
   const [, navigate] = useLocation();
   const [loginMode, setLoginMode] = useState<"master" | "email">("email");
-  const [selectedRole, setSelectedRole] = useState<Role>("admin");
+  const [selectedRole, setSelectedRole] = useState<InternalAccess>("schoolPortal");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [quoteIndex, setQuoteIndex] = useState(0);
@@ -75,7 +77,20 @@ export default function Login() {
       return;
     }
 
-    await loginMutation.mutateAsync(loginMode === "master" ? { role: selectedRole, password } : { email: email.trim(), password });
+    if (loginMode === "master") {
+      if (selectedRole === "schoolPortal") {
+        localStorage.setItem("lumi-master-entry", "school-portal");
+        await loginMutation.mutateAsync({ role: "coordinator", password });
+        return;
+      }
+
+      localStorage.removeItem("lumi-master-entry");
+      await loginMutation.mutateAsync({ role: selectedRole, password });
+      return;
+    }
+
+    localStorage.removeItem("lumi-master-entry");
+    await loginMutation.mutateAsync({ email: email.trim(), password });
   };
 
   return (

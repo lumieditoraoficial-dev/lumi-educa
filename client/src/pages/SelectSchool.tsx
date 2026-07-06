@@ -155,6 +155,10 @@ export default function SelectSchool() {
 
   const chooseSchool = (schoolId: number) => {
     setStoredSchoolFilter(String(normalizeSchoolId(schoolId)) as "1" | "2");
+    if (window.localStorage.getItem("lumi-master-entry") === "school-portal") {
+      navigate("/dashboard/school");
+      return;
+    }
     navigate(dashboardByRole[user?.role ?? "student"] ?? "/dashboard/student");
   };
 

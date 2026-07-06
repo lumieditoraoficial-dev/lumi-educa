@@ -150,6 +150,9 @@ function DashboardLayoutContent({
     ...(user?.role === "student"
       ? [{ icon: BookOpen, label: "Meus livros", path: "/dashboard/student" }]
       : []),
+    ...(["coordinator", "editor", "admin"].includes(user?.role ?? "")
+      ? [{ icon: Building2, label: "Portal Escola", path: "/dashboard/school" }]
+      : []),
     ...(["educator", "coordinator", "editor", "admin"].includes(user?.role ?? "")
       ? [{ icon: Users, label: "Produções", path: dashboardByRole[user?.role ?? "educator"] ?? "/dashboard/educator" }]
       : []),
@@ -166,6 +169,7 @@ function DashboardLayoutContent({
   ];
   const activeMenuItem = menuItems.find(item => item.path === location);
   const masterRoles = [
+    { role: "coordinator", label: "Portal Escola", path: "/dashboard/school", entry: "school-portal" },
     { role: "student", label: "Aluno" },
     { role: "educator", label: "Educador" },
     { role: "coordinator", label: "Coordenador" },
@@ -173,11 +177,16 @@ function DashboardLayoutContent({
     { role: "admin", label: "Administrador" },
   ];
 
-  const switchMasterRole = async (role: string) => {
+  const switchMasterRole = async (role: string, targetPath?: string, entry?: string) => {
+    if (entry) {
+      localStorage.setItem("lumi-master-entry", entry);
+    } else {
+      localStorage.removeItem("lumi-master-entry");
+    }
     const result = await switchMasterRoleMutation.mutateAsync({ role: role as any });
     utils.auth.me.setData(undefined, result.user as any);
     await utils.auth.me.invalidate();
-    setLocation(dashboardByRole[role] ?? "/dashboard/student");
+    setLocation(targetPath ?? dashboardByRole[role] ?? "/dashboard/student");
   };
 
   useEffect(() => {
@@ -348,8 +357,8 @@ function DashboardLayoutContent({
                 {user?.id < 0
                   ? masterRoles.map((item) => (
                       <DropdownMenuItem
-                        key={item.role}
-                        onClick={() => switchMasterRole(item.role)}
+                        key={`${item.role}-${item.label}`}
+                        onClick={() => switchMasterRole(item.role, item.path, item.entry)}
                         className="cursor-pointer"
                       >
                         <Users className="mr-2 h-4 w-4" />
@@ -424,7 +433,7 @@ function DashboardLayoutContent({
                 </span>
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#0F3D2E]/10 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
                   <GraduationCap className="h-3.5 w-3.5 text-[#266B3D]" />
-                  {user.role === "student" ? "Aluno" : user.role === "educator" ? "Educador" : user.role === "coordinator" ? "Coordenador" : user.role === "editor" ? "Editor" : "Administrador"}
+                  {location === "/dashboard/school" ? "Portal Escola" : user.role === "student" ? "Aluno" : user.role === "educator" ? "Educador" : user.role === "coordinator" ? "Coordenador" : user.role === "editor" ? "Editor" : "Administrador"}
                 </span>
                 {showSchoolSwitcher ? (
                   <Button variant="outline" className="gap-2" onClick={() => setLocation("/select-school")}>
