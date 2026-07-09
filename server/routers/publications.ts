@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
-import { createEvaluation, createNotification, createPublication, getBookById, getPagesByBook, listUsers, updateBook, updatePage } from "../db";
+import { createEvaluation, createNotification, createPublication, getBookById, getPagesByBook, getPublishedBooks, listUsers, updateBook, updatePage } from "../db";
 import { TRPCError } from "@trpc/server";
 import { canSeeAllSchools, sameSchool } from "../_core/schools";
 import { polishHtmlForEducator } from "../_core/textReview";
 
-const editableBookStatuses = ["draft", "submitted", "under_review", "approved", "rejected"];
+const editableBookStatuses = ["draft", "submitted", "under_review", "approved", "rejected", "published"];
 
 async function preparePagesForReview(bookId: number) {
   const pages = await getPagesByBook(bookId);
@@ -36,6 +36,21 @@ async function approveSubmittedPages(bookId: number, reviewerId: number) {
           status: "approved",
           reviewedAt: new Date(),
           reviewedBy: reviewerId,
+        })
+      )
+  );
+}
+
+async function publishApprovedPages(bookId: number, reviewerId: number) {
+  const pages = await getPagesByBook(bookId);
+  await Promise.all(
+    pages
+      .filter((page) => page.status === "approved")
+      .map((page) =>
+        updatePage(page.id, {
+          status: "published",
+          reviewedAt: page.reviewedAt ?? new Date(),
+          reviewedBy: page.reviewedBy ?? reviewerId,
         })
       )
   );
@@ -220,18 +235,23 @@ export const publicationsRouter = router({
       if (!book) throw new TRPCError({ code: "NOT_FOUND" });
       if (book.status !== "approved") throw new TRPCError({ code: "BAD_REQUEST" });
       await assertStaffCanHandleBook(book, ctx.user);
+      await publishApprovedPages(input.bookId, ctx.user.id);
 
       const updatedBook = await updateBook(input.bookId, {
         status: "published",
         publishedAt: new Date(),
       });
 
-      await createPublication({
-        bookId: input.bookId,
-        publishedBy: ctx.user.id,
-        status: "published",
-        libraryUrl: `/library/book/${input.bookId}`,
-      });
+      const publishedBooks = await getPublishedBooks();
+      const alreadyInLibrary = publishedBooks.some((publication) => publication.bookId === input.bookId);
+      if (!alreadyInLibrary) {
+        await createPublication({
+          bookId: input.bookId,
+          publishedBy: ctx.user.id,
+          status: "published",
+          libraryUrl: `/library/book/${input.bookId}`,
+        });
+      }
 
       return updatedBook;
     }),

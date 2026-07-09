@@ -64,22 +64,25 @@ function textToParagraphs(text: string) {
 
 function parseSavedContent(savedContent: string) {
   if (typeof window === "undefined" || !savedContent.includes("data-lumi-page-content")) {
-    return { html: removeAutoPageBreaks(savedContent), fontSize: 17 };
+    return { html: removeAutoPageBreaks(savedContent), fontSize: 17, pageCount: 1 };
   }
 
   const documentParser = new DOMParser();
   const parsed = documentParser.parseFromString(savedContent, "text/html");
   const wrapper = parsed.querySelector("[data-lumi-page-content]") as HTMLElement | null;
   const parsedFontSize = Number.parseInt(wrapper?.style.fontSize ?? "", 10);
+  const parsedPageCount = Number.parseInt(wrapper?.dataset.lumiPageCount ?? "", 10);
 
   return {
     html: removeAutoPageBreaks(wrapper?.innerHTML ?? savedContent),
     fontSize: Number.isFinite(parsedFontSize) ? parsedFontSize : 17,
+    pageCount: Number.isFinite(parsedPageCount) && parsedPageCount > 0 ? parsedPageCount : 1,
   };
 }
 
-function serializeContent(html: string, fontSize: number) {
-  return `<div data-lumi-page-content="true" data-lumi-version="5" style="font-size: ${fontSize}px;">${removeAutoPageBreaks(html)}</div>`;
+function serializeContent(html: string, fontSize: number, pageCount: number) {
+  const normalizedPageCount = Math.max(1, Math.ceil(pageCount || 1));
+  return `<div data-lumi-page-content="true" data-lumi-version="6" data-lumi-page-count="${normalizedPageCount}" style="font-size: ${fontSize}px;">${removeAutoPageBreaks(html)}</div>`;
 }
 
 function calculatePageCount(element: HTMLDivElement | null) {
@@ -246,7 +249,8 @@ export default function PageEditor() {
   const { data: pages = [] } = trpc.books.getPages.useQuery({ bookId }, { enabled: Boolean(bookId) });
   const updatePageMutation = trpc.books.updatePageContent.useMutation();
   const currentPage = pages.find((page) => page.id === pageId);
-  const canEdit = user?.role === "student" && book?.status !== "published";
+  const pageIsLocked = currentPage?.status === "published" || (book?.status === "published" && currentPage?.status === "approved");
+  const canEdit = user?.role === "student" && book?.authorId === user.id && !pageIsLocked;
 
   const getCleanEditorHtml = useCallback(() => {
     const editor = editorRef.current;
@@ -291,6 +295,7 @@ export default function PageEditor() {
     setTitle(currentPage.title ?? book?.title ?? "");
     setContent(parsedContent.html);
     setFontSize(parsedContent.fontSize);
+    setPageCount(parsedContent.pageCount);
     setWordCount(countWords(parsedContent.html));
 
     if (editorRef.current) {
@@ -308,15 +313,23 @@ export default function PageEditor() {
 
       setIsSaving(true);
       try {
+        const visualPageCount = editorRef.current ? normalizePageFlow(editorRef.current) : pageCount;
+        const cleanContent = editorRef.current ? getCleanEditorHtml() : contentToSave;
+        setPageCount(visualPageCount);
+        setContent(cleanContent);
+        setWordCount(countWords(cleanContent));
         await updatePageMutation.mutateAsync({
           pageId,
           title: titleToSave,
-          content: serializeContent(contentToSave, fontSizeToSave),
+          content: serializeContent(cleanContent, fontSizeToSave, visualPageCount),
         });
         dirtyRef.current = false;
         setLastSavedAt(new Date());
         if (showToast) {
           await utils.books.getPages.invalidate({ bookId });
+          await utils.books.getBook.invalidate({ bookId });
+          await utils.books.myBooks.invalidate();
+          await utils.books.listBooks.invalidate();
           toast.success("Texto salvo.");
         }
       } catch {
@@ -325,7 +338,7 @@ export default function PageEditor() {
         setIsSaving(false);
       }
     },
-    [bookId, canEdit, content, fontSize, pageId, title, updatePageMutation, utils.books.getPages]
+    [bookId, canEdit, content, fontSize, getCleanEditorHtml, pageCount, pageId, title, updatePageMutation, utils.books.getBook, utils.books.getPages, utils.books.listBooks, utils.books.myBooks]
   );
 
   const scheduleAutoSave = (nextContent = content, nextTitle = title, nextFontSize = fontSize) => {

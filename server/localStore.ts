@@ -21,6 +21,7 @@ import type {
   School,
   User,
 } from "../drizzle/schema";
+import { buildBookMetricsFromPages } from "./_core/pageMetrics";
 import { normalizeSchoolId } from "./_core/schools";
 
 type Role = NonNullable<User["role"]>;
@@ -137,8 +138,9 @@ function syncBookMetrics(data: LocalData, bookId: number) {
   if (!book) return;
 
   const bookPages = data.pages.filter((page) => page.bookId === bookId);
-  book.pageCount = bookPages.length;
-  book.wordCount = bookPages.reduce((total, page) => total + (page.wordCount ?? 0), 0);
+  const metrics = buildBookMetricsFromPages(bookPages);
+  book.pageCount = metrics.pageCount;
+  book.wordCount = metrics.wordCount;
   book.updatedAt = new Date();
 }
 
@@ -495,20 +497,30 @@ export async function localDeletePage(pageId: number) {
 
 export async function localGetPublishedBooks() {
   const data = await readData();
-  return data.books
-    .filter((book) => book.status === "published")
-    .map((book) => {
-      const publication = data.publications.find((item) => item.bookId === book.id);
+  const publishedPublications = data.publications.filter((item) => item.status === "published");
+  const publicationBookIds = new Set(publishedPublications.map((item) => item.bookId));
+  const legacyPublishedBooks = data.books
+    .filter((book) => book.status === "published" && !publicationBookIds.has(book.id))
+    .map((book) => ({
+      id: book.id,
+      bookId: book.id,
+      publishedAt: book.publishedAt ?? book.updatedAt,
+      publishedBy: -50,
+      libraryUrl: `/library/book/${book.id}`,
+      status: "published" as const,
+      book,
+    }));
+
+  return [
+    ...publishedPublications.map((publication) => {
+      const book = data.books.find((item) => item.id === publication.bookId);
       return {
-        id: publication?.id ?? book.id,
-        bookId: book.id,
-        publishedAt: publication?.publishedAt ?? book.publishedAt ?? book.updatedAt,
-        publishedBy: publication?.publishedBy ?? -50,
-        libraryUrl: publication?.libraryUrl ?? `/library/book/${book.id}`,
-        status: publication?.status ?? "published",
+        ...publication,
         book,
       };
-    });
+    }),
+    ...legacyPublishedBooks,
+  ];
 }
 
 export async function localCreatePublication(publication: InsertPublication) {

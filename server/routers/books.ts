@@ -16,17 +16,23 @@ import {
 } from "../db";
 import { TRPCError } from "@trpc/server";
 import { canSeeAllSchools, sameSchool } from "../_core/schools";
-import { countWords } from "../_core/textReview";
+import { buildBookMetricsFromPages, withBookMetrics } from "../_core/pageMetrics";
 
 const staffRoles = ["educator", "coordinator", "editor", "admin"];
-const editableBookStatuses = ["draft", "submitted", "under_review", "approved", "rejected"];
+const editableBookStatuses = ["draft", "submitted", "under_review", "approved", "rejected", "published"];
 
 async function syncBookMetrics(bookId: number) {
   const pages = await getPagesByBook(bookId);
-  await updateBook(bookId, {
-    pageCount: pages.length,
-    wordCount: pages.reduce((sum, page) => sum + countWords(page.content), 0),
-  });
+  await updateBook(bookId, buildBookMetricsFromPages(pages));
+}
+
+async function enrichBookMetrics<TBook extends { id: number; pageCount?: number | null; wordCount?: number | null }>(book: TBook) {
+  const pages = await getPagesByBook(book.id);
+  return withBookMetrics(book, pages);
+}
+
+async function enrichBooksMetrics<TBook extends { id: number; pageCount?: number | null; wordCount?: number | null }>(books: TBook[]) {
+  return Promise.all(books.map((book) => enrichBookMetrics(book)));
 }
 
 function getVisibleStudentIds(users: Awaited<ReturnType<typeof listUsers>>, viewer: any) {
@@ -56,7 +62,8 @@ export const booksRouter = router({
     if (ctx.user.role !== "student") {
       throw new TRPCError({ code: "FORBIDDEN" });
     }
-    return getBooksByAuthor(ctx.user.id);
+    const books = await getBooksByAuthor(ctx.user.id);
+    return enrichBooksMetrics(books);
   }),
 
   listBooks: protectedProcedure.query(async ({ ctx }) => {
@@ -69,10 +76,10 @@ export const booksRouter = router({
     if (!canSeeAllSchools(ctx.user)) {
       const users = await listUsers();
       const allowedStudentIds = getVisibleStudentIds(users, ctx.user);
-      return books.filter((book) => allowedStudentIds.has(book.authorId));
+      return enrichBooksMetrics(books.filter((book) => allowedStudentIds.has(book.authorId)));
     }
 
-    return books;
+    return enrichBooksMetrics(books);
   }),
 
   // Get book details
@@ -87,7 +94,7 @@ export const booksRouter = router({
       if (!canAccessBook(book, ctx.user, users)) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
-      return book;
+      return enrichBookMetrics(book);
     }),
 
   // Create new book
@@ -182,6 +189,9 @@ export const booksRouter = router({
       if (!book || book.authorId !== ctx.user.id) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
+      if (page.status === "published" || (book.status === "published" && page.status === "approved")) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Esta parte ja esta publicada. Use continuar escrevendo para criar a proxima parte." });
+      }
       if (!editableBookStatuses.includes(book.status)) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Este livro ja foi publicado e nao pode ser editado agora." });
       }
@@ -207,6 +217,9 @@ export const booksRouter = router({
       const book = await getBookById(page.bookId);
       if (!book || book.authorId !== ctx.user.id) {
         throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      if (page.status === "published" || (book.status === "published" && page.status === "approved")) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Esta parte ja esta publicada e nao pode ser removida." });
       }
       if (!editableBookStatuses.includes(book.status)) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Este livro ja foi publicado e nao pode ser alterado agora." });
@@ -234,7 +247,7 @@ export const booksRouter = router({
       if (!book) throw new TRPCError({ code: "NOT_FOUND" });
 
       const users = await listUsers();
-      const canEditOwn = ctx.user.role === "student" && book.authorId === ctx.user.id && book.status !== "published";
+      const canEditOwn = ctx.user.role === "student" && book.authorId === ctx.user.id;
       const canEditEditorial = ["editor", "coordinator", "admin"].includes(ctx.user.role) && canAccessBook(book, ctx.user, users);
 
       if (!canEditOwn && !canEditEditorial) {

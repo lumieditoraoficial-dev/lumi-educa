@@ -111,14 +111,14 @@ export default function BookPages({ bookId }: { bookId: number }) {
   };
   const backPath = dashboardByRole[user?.role ?? "student"] ?? "/dashboard/student";
   const isStaff = user ? ["educator", "coordinator", "editor", "admin"].includes(user.role) : false;
-  const canEdit = user?.role === "student" && book.status !== "published";
+  const canEdit = user?.role === "student" && book.authorId === user.id;
   const reviewablePages = sortedPages.filter((page) => !["approved", "published"].includes(page.status));
   const submittedPages = sortedPages.filter((page) => page.status === "submitted");
   const correctedPages = sortedPages.filter((page) => ["approved", "published"].includes(page.status));
   const activeWritingPage = reviewablePages[0] ?? null;
   const canSubmitForReview = canEdit && reviewablePages.length > 0;
   const totalWords = sortedPages.reduce((total, page) => total + countWords(page.content), 0);
-  const estimatedPrintedPages = Math.max(sortedPages.length ? sortedPages.length : 1, Math.ceil(totalWords / 330));
+  const estimatedPrintedPages = Math.max(book.pageCount ?? 0, sortedPages.length ? sortedPages.length : 1, Math.ceil(totalWords / 330));
   const openWritingStudio = () => {
     if (!canEdit) return;
     if (activeWritingPage) {
@@ -173,7 +173,7 @@ export default function BookPages({ bookId }: { bookId: number }) {
                 onClick={() => submitMutation.mutate({ bookId })}
               >
                 <Send className="mr-2 h-4 w-4" />
-                {book.status === "published" ? "Publicado" : "Enviar páginas novas"}
+                Enviar paginas novas
               </Button>
             </div>
           ) : (
@@ -366,7 +366,9 @@ export default function BookPages({ bookId }: { bookId: number }) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sortedPages.map((page) => (
+                    {sortedPages.map((page) => {
+                      const canEditPage = canEdit && page.status !== "published" && !(book.status === "published" && page.status === "approved");
+                      return (
                       <TableRow key={page.id}>
                         <TableCell className="font-semibold">#{page.pageNumber}</TableCell>
                         <TableCell>{page.title || "Sem título"}</TableCell>
@@ -377,7 +379,7 @@ export default function BookPages({ bookId }: { bookId: number }) {
                         </TableCell>
                         <TableCell>{countWords(page.content)}</TableCell>
                         <TableCell className="max-w-[260px] text-sm text-slate-600">
-                          {page.status === "approved" ? (
+                          {["approved", "published"].includes(page.status) ? (
                             <span className="inline-flex items-center gap-1 text-emerald-700">
                               <CheckCircle2 className="h-4 w-4" />
                               Já corrigida
@@ -392,16 +394,16 @@ export default function BookPages({ bookId }: { bookId: number }) {
                           <div className="flex flex-wrap gap-2">
                             <Button
                               size="sm"
-                              className={canEdit ? "bg-emerald-700 hover:bg-emerald-800" : ""}
-                              variant={canEdit ? "default" : "outline"}
+                              className={canEditPage ? "bg-emerald-700 hover:bg-emerald-800" : ""}
+                              variant={canEditPage ? "default" : "outline"}
                               onClick={() => navigate(`/page-editor?bookId=${bookId}&pageId=${page.id}`)}
                             >
-                              {canEdit ? "Escrever" : "Ler"}
+                              {canEditPage ? "Escrever" : "Ler"}
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
-                              disabled={!canEdit || deletePageMutation.isPending}
+                              disabled={!canEditPage || deletePageMutation.isPending}
                               onClick={() => {
                                 if (confirm("Remover esta parte?")) {
                                   deletePageMutation.mutate({ pageId: page.id });
@@ -415,7 +417,8 @@ export default function BookPages({ bookId }: { bookId: number }) {
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))}
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>

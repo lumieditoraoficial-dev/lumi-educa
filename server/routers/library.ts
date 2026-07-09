@@ -2,6 +2,13 @@ import { z } from "zod";
 import { publicProcedure, router } from "../_core/trpc";
 import { getBookById, getPagesByBook, getPublishedBooks } from "../db";
 import { TRPCError } from "@trpc/server";
+import { withBookMetrics } from "../_core/pageMetrics";
+
+function getLibraryPages<TPage extends { status: string }>(pages: TPage[]) {
+  const publishedPages = pages.filter((page) => page.status === "published");
+  if (publishedPages.length > 0) return publishedPages;
+  return pages.filter((page) => page.status === "approved");
+}
 
 export const libraryRouter = router({
   // Get all published books (public access)
@@ -35,18 +42,31 @@ export const libraryRouter = router({
         );
       }
 
-      return filtered;
+      return Promise.all(
+        filtered.map(async (publication) => {
+          if (!publication.book) return publication;
+          const pages = await getPagesByBook(publication.book.id);
+          const libraryPages = getLibraryPages(pages);
+          return {
+            ...publication,
+            book: withBookMetrics(publication.book, libraryPages),
+          };
+        })
+      );
     }),
 
   getPublishedBook: publicProcedure
     .input(z.object({ bookId: z.number() }))
     .query(async ({ input }) => {
       const book = await getBookById(input.bookId);
-      if (!book || book.status !== "published") {
+      const publications = await getPublishedBooks();
+      const publication = publications.find((item) => item.bookId === input.bookId);
+      if (!book || !publication) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
       const pages = await getPagesByBook(input.bookId);
-      return { book, pages };
+      const libraryPages = getLibraryPages(pages);
+      return { book: withBookMetrics(book, libraryPages), pages: libraryPages };
     }),
 });

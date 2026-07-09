@@ -9,6 +9,12 @@ function plainText(html?: string | null) {
   return (html ?? "").replace(/<[^>]*>/g, " ").trim();
 }
 
+function extractPageHtml(content?: string | null) {
+  const raw = content ?? "";
+  const wrapperMatch = raw.match(/<div[^>]*data-lumi-page-content=["']true["'][^>]*>([\s\S]*)<\/div>\s*$/i);
+  return wrapperMatch?.[1] ?? raw;
+}
+
 export default function BookReader({ bookId }: { bookId: number }) {
   const [, navigate] = useLocation();
   const [pageIndex, setPageIndex] = useState(0);
@@ -16,6 +22,7 @@ export default function BookReader({ bookId }: { bookId: number }) {
 
   const pages = data?.pages ?? [];
   const currentPage = pages[pageIndex];
+  const totalPages = Math.max(data?.book.pageCount ?? 0, pages.length ? pages.length : 0);
   const totalWords = useMemo(
     () => pages.reduce((total, page) => total + plainText(page.content).split(/\s+/).filter(Boolean).length, 0),
     [pages]
@@ -54,32 +61,38 @@ export default function BookReader({ bookId }: { bookId: number }) {
             <div>
               <h1 className="text-xl font-bold text-stone-950">{data.book.title}</h1>
               <p className="text-sm text-stone-600">
-                {pages.length} páginas • {totalWords} palavras
+                {totalPages} paginas • {totalWords} palavras
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2 text-sm text-stone-600">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={pageIndex === 0}
-              onClick={() => setPageIndex((value) => Math.max(0, value - 1))}
-            >
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              Anterior
-            </Button>
-            <span>
-              Página {pages.length ? pageIndex + 1 : 0} de {pages.length}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={pageIndex >= pages.length - 1}
-              onClick={() => setPageIndex((value) => Math.min(pages.length - 1, value + 1))}
-            >
-              Próxima
-              <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
+            {pages.length > 1 ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pageIndex === 0}
+                  onClick={() => setPageIndex((value) => Math.max(0, value - 1))}
+                >
+                  <ChevronLeft className="mr-1 h-4 w-4" />
+                  Anterior
+                </Button>
+                <span>
+                  Parte {pages.length ? pageIndex + 1 : 0} de {pages.length}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pageIndex >= pages.length - 1}
+                  onClick={() => setPageIndex((value) => Math.min(pages.length - 1, value + 1))}
+                >
+                  Proxima
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </>
+            ) : (
+              <span>Documento completo • {totalPages} paginas</span>
+            )}
           </div>
         </div>
       </header>
@@ -92,13 +105,13 @@ export default function BookReader({ bookId }: { bookId: number }) {
             <>
               <div className="mb-8 border-b pb-4">
                 <p className="text-sm font-medium uppercase tracking-wide text-emerald-700">
-                  Página {currentPage?.pageNumber}
+                  Documento do livro
                 </p>
                 <h2 className="mt-2 text-3xl font-bold text-stone-950">{currentPage?.title || data.book.title}</h2>
               </div>
               <article
                 className="prose prose-stone max-w-none text-lg leading-9"
-                dangerouslySetInnerHTML={{ __html: currentPage?.content || "<p>Página sem texto.</p>" }}
+                dangerouslySetInnerHTML={{ __html: extractPageHtml(currentPage?.content) || "<p>Pagina sem texto.</p>" }}
               />
             </>
           )}
