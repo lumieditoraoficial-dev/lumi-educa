@@ -2,6 +2,7 @@ import BrandLogo from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { usePageSeo } from "@/lib/seo";
 import { trpc } from "@/lib/trpc";
 import { BookOpen, Building2, GraduationCap, Lock, Mail, ShieldCheck, Sparkles, UserCog, Users } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -43,6 +44,12 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [quoteIndex, setQuoteIndex] = useState(0);
+  usePageSeo({
+    title: "Acesso escolar | Lumi Educa",
+    description: "Entrada segura para alunos, educadores, coordenacao, editor e administracao do Lumi Educa.",
+    canonicalPath: "/login",
+    robots: "noindex, nofollow",
+  });
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -113,13 +120,9 @@ export default function Login() {
               Portal da escola
             </p>
             <h1 className="mt-5 max-w-3xl text-5xl font-black leading-tight tracking-normal sm:text-6xl">
-              Acesse sua escola e continue sua obra.
+              Acesse sua escola.
             </h1>
-            <p className="mt-6 max-w-2xl text-xl leading-8 text-white/80">
-              Escrita, feedback, notas, metas e biblioteca em um unico ambiente oficial.
-            </p>
             <div className="mt-8 max-w-2xl border-l-4 border-[#F4C430] pl-5">
-              <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#F4C430]">Inspiracao</p>
               <p className="mt-2 text-lg leading-7 text-white">{motivationalQuotes[quoteIndex]}</p>
             </div>
             <div className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">

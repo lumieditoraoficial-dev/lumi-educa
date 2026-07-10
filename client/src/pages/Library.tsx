@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { usePageSeo } from "@/lib/seo";
 import { trpc } from "@/lib/trpc";
 import { BookOpen, Search, Star, Trophy } from "lucide-react";
 import { useState } from "react";
@@ -20,6 +21,11 @@ export default function Library() {
     category: category || undefined,
     series: series || undefined,
   });
+  usePageSeo({
+    title: "Biblioteca Digital | Lumi Educa",
+    description: "Biblioteca digital Lumi Educa com livros estudantis publicados pelas escolas participantes.",
+    canonicalPath: "/library",
+  });
 
   return (
     <div className="lumi-page-aura min-h-screen">
@@ -33,13 +39,7 @@ export default function Library() {
           </div>
           <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
             <div>
-              <p className="mb-3 inline-flex rounded-full border border-[#F4C430]/40 bg-[#F4C430]/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#F4C430]">
-                Biblioteca oficial
-              </p>
               <h1 className="text-4xl font-black tracking-normal md:text-5xl">Biblioteca Digital</h1>
-              <p className="mt-2 max-w-2xl text-[#F7F3E9]/85">
-                Leia as obras aprovadas, publicadas e organizadas pela escola.
-              </p>
             </div>
             <div className="rounded-lg border border-white/16 bg-white/10 p-4 backdrop-blur">
               <div className="flex items-center gap-3">

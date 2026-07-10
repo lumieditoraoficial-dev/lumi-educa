@@ -1,0 +1,24 @@
+{
+  "name": "Lumi Educa",
+  "short_name": "Lumi Educa",
+  "description": "Portal de autoria estudantil e biblioteca digital escolar.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F8F7EB",
+  "theme_color": "#0F3D2E",
+  "icons": [
+    {
+      "src": "/lumi-educa-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/lumi-educa-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

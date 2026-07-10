@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { usePageSeo } from "@/lib/seo";
 import { trpc } from "@/lib/trpc";
 import { ArrowLeft, BookOpen, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -19,6 +20,11 @@ export default function BookReader({ bookId }: { bookId: number }) {
   const [, navigate] = useLocation();
   const [pageIndex, setPageIndex] = useState(0);
   const { data, isLoading } = trpc.library.getPublishedBook.useQuery({ bookId });
+  usePageSeo({
+    title: data?.book.title ? `${data.book.title} | Biblioteca Lumi Educa` : "Livro publicado | Lumi Educa",
+    description: data?.book.description || "Livro estudantil publicado na Biblioteca Digital Lumi Educa.",
+    canonicalPath: `/library/book/${bookId}`,
+  });
 
   const pages = data?.pages ?? [];
   const currentPage = pages[pageIndex];

@@ -1,6 +1,7 @@
 import BrandLogo from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BookOpen, Building2, Library, LockKeyhole, PenLine, ShieldCheck, Sparkles } from "lucide-react";
+import { usePageSeo } from "@/lib/seo";
+import { ArrowRight, BookOpen, Building2, Library, LockKeyhole, PenLine, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 
@@ -13,7 +14,7 @@ const quotes = [
 
 const accessCards = [
   {
-    title: "Entrar na plataforma",
+    title: "Entrar",
     label: "Entrar",
     path: "/login",
     icon: LockKeyhole,
@@ -33,14 +34,19 @@ const accessCards = [
 ];
 
 const officialFlow = [
-  { label: "Escrita", detail: "livros, paginas e imagens", icon: PenLine },
-  { label: "Acompanhamento", detail: "notas, feedbacks e metas", icon: ShieldCheck },
-  { label: "Publicacao", detail: "PDF e biblioteca digital", icon: BookOpen },
+  { label: "Escrita", icon: PenLine },
+  { label: "Acompanhamento", icon: ShieldCheck },
+  { label: "Publicacao", icon: BookOpen },
 ];
 
 export default function Home() {
   const [, navigate] = useLocation();
   const [quoteIndex, setQuoteIndex] = useState(0);
+  usePageSeo({
+    title: "Lumi Educa | Autoria estudantil e biblioteca digital",
+    description: "Lumi Educa e o portal de autoria estudantil para escrita de livros, acompanhamento pedagogico e biblioteca digital escolar.",
+    canonicalPath: "/",
+  });
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -79,18 +85,11 @@ export default function Home() {
                 <div className="mb-7">
                   <BrandLogo inverted showTagline />
                 </div>
-                <p className="mb-5 inline-flex rounded-full border border-[#F4C430]/48 bg-[#F4C430]/14 px-4 py-2 text-sm font-bold uppercase tracking-[0.22em] text-[#F4C430]">
-                  Portal oficial
-                </p>
                 <h1 className="max-w-4xl text-5xl font-black leading-[0.98] tracking-normal sm:text-6xl lg:text-7xl">
                   Lumi Educa
                 </h1>
-                <p className="mt-6 max-w-2xl text-xl leading-8 text-[#F7F3E9]/88">
-                  Um ambiente escolar para transformar escrita em livro, acompanhar desempenho e celebrar a autoria dos alunos.
-                </p>
 
                 <div className="mt-8 min-h-[4.5rem] max-w-2xl border-l-4 border-[#F4C430] pl-5">
-                  <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#F4C430]">Mensagem do dia</p>
                   <p className="mt-2 text-lg leading-7 text-white">{quotes[quoteIndex]}</p>
                 </div>
 
@@ -116,7 +115,6 @@ export default function Home() {
                       <div key={item.label} className="rounded-lg border border-white/14 bg-white/10 p-4 backdrop-blur">
                         <Icon className="h-5 w-5 text-[#F4C430]" />
                         <p className="mt-3 font-black text-white">{item.label}</p>
-                        <p className="mt-1 text-sm leading-5 text-white/68">{item.detail}</p>
                       </div>
                     );
                   })}
@@ -126,7 +124,6 @@ export default function Home() {
               <aside className="lumi-glass-panel rounded-lg p-5">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm uppercase tracking-[0.2em] text-[#F4C430]">Acesso rapido</p>
                     <h2 className="mt-2 text-2xl font-black text-white">Portal da escola</h2>
                   </div>
                   <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-[#F4C430] text-[#0F3D2E]">
@@ -159,12 +156,8 @@ export default function Home() {
                   })}
                 </div>
 
-                <div className="mt-5 rounded-lg bg-[#F4C430] p-4 text-[#0F3D2E]">
-                  <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.16em]">
-                    <Sparkles className="h-4 w-4" />
-                    Rotina de uso
-                  </p>
-                  <p className="mt-1 text-sm font-semibold leading-6">Entre todos os dias letivos para continuar sua escrita, acompanhar retornos e cumprir metas.</p>
+                <div className="mt-5 rounded-lg bg-[#F4C430] p-4 text-sm font-black uppercase tracking-[0.16em] text-[#0F3D2E]">
+                  Acesso escolar ativo
                 </div>
               </aside>
             </div>
@@ -175,7 +168,7 @@ export default function Home() {
       <footer className="border-t border-[#0F3D2E]/10 bg-white px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 text-sm text-[#0F3D2E]/65 md:flex-row md:items-center">
           <BrandLogo compact />
-          <p>2026 Lumi Educa. Portal oficial.</p>
+          <p>2026 Lumi Educa.</p>
         </div>
       </footer>
     </div>
