@@ -1,5 +1,4 @@
 import type { Express, Request } from "express";
-import { getPublishedBooks } from "../db";
 
 const PUBLIC_ROUTES = ["/", "/library"];
 const PRIVATE_PREFIXES = [
@@ -67,23 +66,7 @@ export function registerSeoRoutes(app: Express) {
 
   app.get("/sitemap.xml", async (req, res) => {
     const origin = getOrigin(req);
-    let publications: Awaited<ReturnType<typeof getPublishedBooks>> = [];
-    try {
-      publications = await getPublishedBooks();
-    } catch (error) {
-      console.warn("[SEO] Could not include published books in sitemap:", error);
-    }
-    const bookRoutes = publications
-      .filter((publication) => publication.book)
-      .map((publication) => ({
-        path: `/library/book/${publication.bookId}`,
-        lastmod: normalizeDate(publication.publishedAt ?? publication.book?.updatedAt),
-      }));
-
-    const urls = [
-      ...PUBLIC_ROUTES.map((path) => ({ path, lastmod: normalizeDate(new Date()) })),
-      ...bookRoutes,
-    ];
+    const urls = PUBLIC_ROUTES.map((path) => ({ path, lastmod: normalizeDate(new Date()) }));
 
     const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
       .map(

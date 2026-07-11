@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /books/
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /messages
+Disallow: /notifications
+Disallow: /page-editor
+Disallow: /profile
+Disallow: /select-school
+Disallow: /signup
+Disallow: /status
+Sitemap: https://lumi-educa.onrender.com/sitemap.xml
+
