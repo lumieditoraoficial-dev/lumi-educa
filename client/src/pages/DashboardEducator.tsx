@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { STUDENT_BREAK_DESCRIPTION, STUDENT_BREAK_LABEL, STUDENTS_ON_BREAK } from "@/lib/academicCalendar";
 import { buildStudentInsights, formatLastAccess, formatScore, isWeekend } from "@/lib/insights";
 import { SCHOOL_OPTIONS, type SchoolFilter, getSchoolLabel, matchesSchool, normalizeSchoolId } from "@/lib/schools";
 import { trpc } from "@/lib/trpc";
@@ -109,8 +110,14 @@ export default function DashboardEducator() {
         <div>
           <h1 className="text-4xl font-bold text-slate-950">Painel do Educador</h1>
           <p className="mt-2 text-slate-600">
-            Acompanhe acesso, desempenho, notas e producoes dos alunos antes da revisao final.
+            Acompanhe uso, desempenho, notas e producoes dos alunos antes da revisao final.
           </p>
+          {STUDENTS_ON_BREAK ? (
+            <div className="mt-4 rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900">
+              <p className="font-black">{STUDENT_BREAK_LABEL}</p>
+              <p className="mt-1">{STUDENT_BREAK_DESCRIPTION}</p>
+            </div>
+          ) : null}
           <div className="mt-4 w-full max-w-xs">
             <Select value={effectiveSchoolFilter} disabled>
               <SelectTrigger>
@@ -154,11 +161,15 @@ export default function DashboardEducator() {
         <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-3">
-              <CardTitle>Acesso obrigatorio</CardTitle>
-              <Badge variant="outline">{isWeekend(now) ? "Fim de semana" : "Segunda a sexta"}</Badge>
+              <CardTitle>{STUDENTS_ON_BREAK ? "Uso nas ferias" : "Acesso obrigatorio"}</CardTitle>
+              <Badge variant="outline">{STUDENTS_ON_BREAK ? "Uso livre" : isWeekend(now) ? "Fim de semana" : "Segunda a sexta"}</Badge>
             </CardHeader>
             <CardContent>
-              {isWeekend(now) ? (
+              {STUDENTS_ON_BREAK ? (
+                <p className="rounded-lg border border-sky-100 bg-sky-50 p-5 text-sm text-sky-800">
+                  Alunos em ferias: o acesso diario nao esta sendo cobrado, mas todos podem continuar escrevendo e usando a plataforma.
+                </p>
+              ) : isWeekend(now) ? (
                 <p className="rounded-lg border border-dashed p-5 text-sm text-slate-600">
                   Hoje nao conta como dia obrigatorio. O acompanhamento volta automaticamente no proximo dia letivo.
                 </p>

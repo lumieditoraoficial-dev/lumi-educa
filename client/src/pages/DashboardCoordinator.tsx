@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { STUDENT_BREAK_DESCRIPTION, STUDENT_BREAK_LABEL, STUDENTS_ON_BREAK } from "@/lib/academicCalendar";
 import { buildClassInsights, buildStudentInsights, formatLastAccess, formatScore, isWeekend, toDate } from "@/lib/insights";
 import { ALL_SCHOOLS, SCHOOL_OPTIONS, type SchoolFilter, getSchoolLabel, matchesSchool, normalizeSchoolId } from "@/lib/schools";
 import { useSelectedSchoolFilter } from "@/lib/selectedSchool";
@@ -158,8 +159,14 @@ export default function DashboardCoordinator() {
         <div>
           <h1 className="text-4xl font-bold text-slate-950">Painel do Coordenador</h1>
           <p className="mt-2 text-slate-600">
-            Monitore turmas, acesso diario, desempenho pedagogico e fluxo de aprovacao das obras.
+            Monitore turmas, uso da plataforma, desempenho pedagogico e fluxo de aprovacao das obras.
           </p>
+          {STUDENTS_ON_BREAK ? (
+            <div className="mt-4 rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900">
+              <p className="font-black">{STUDENT_BREAK_LABEL}</p>
+              <p className="mt-1">{STUDENT_BREAK_DESCRIPTION}</p>
+            </div>
+          ) : null}
           <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
             <div className="w-full max-w-xs">
               <Select
@@ -198,7 +205,7 @@ export default function DashboardCoordinator() {
             </CardHeader>
             <CardContent className="grid gap-3 sm:grid-cols-2">
               {[
-                { label: "Acesso hoje", value: `${accessRate}%`, detail: `${accessedToday.length}/${students.length} alunos` },
+                { label: STUDENTS_ON_BREAK ? "Usaram hoje" : "Acesso hoje", value: `${accessRate}%`, detail: `${accessedToday.length}/${students.length} alunos` },
                 { label: "Alunos produzindo", value: writingStudents, detail: "com texto iniciado" },
                 { label: "Paginas por aluno", value: averagePagesPerStudent, detail: "media da escola" },
                 { label: "Taxa de publicacao", value: `${publishRate}%`, detail: `${published.length}/${books.length} livros` },
@@ -392,11 +399,15 @@ export default function DashboardCoordinator() {
           <div className="space-y-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-3">
-                <CardTitle>Acesso do dia</CardTitle>
-                <Badge variant="outline">{isWeekend(now) ? "Sem cobranca" : "Obrigatorio"}</Badge>
+                <CardTitle>{STUDENTS_ON_BREAK ? "Uso nas ferias" : "Acesso do dia"}</CardTitle>
+                <Badge variant="outline">{STUDENTS_ON_BREAK ? "Uso livre" : isWeekend(now) ? "Sem cobranca" : "Obrigatorio"}</Badge>
               </CardHeader>
               <CardContent className="space-y-3">
-                {isWeekend(now) ? (
+                {STUDENTS_ON_BREAK ? (
+                  <p className="rounded-lg border border-sky-100 bg-sky-50 p-5 text-sm text-sky-800">
+                    Periodo de ferias: o acesso diario nao gera pendencia. A plataforma segue liberada para todos.
+                  </p>
+                ) : isWeekend(now) ? (
                   <p className="rounded-lg border border-dashed p-5 text-sm text-slate-600">
                     Sabado e domingo nao entram na meta obrigatoria de acesso.
                   </p>

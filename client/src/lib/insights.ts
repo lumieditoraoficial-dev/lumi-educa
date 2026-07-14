@@ -1,3 +1,5 @@
+import { STUDENT_BREAK_LABEL, STUDENTS_ON_BREAK } from "./academicCalendar";
+
 export const ONLINE_WINDOW_MS = 75_000;
 
 type AnyUser = {
@@ -59,7 +61,20 @@ export function hasAccessedToday(user: AnyUser, now = new Date()) {
   return activity.toDateString() === now.toDateString();
 }
 
+export function isStudentOnBreak(user: AnyUser) {
+  return STUDENTS_ON_BREAK && user.role === "student";
+}
+
 export function dailyAccessStatus(user: AnyUser, now = new Date()) {
+  if (isStudentOnBreak(user)) {
+    return {
+      label: `${STUDENT_BREAK_LABEL} - uso livre`,
+      ok: true,
+      required: false,
+      className: "bg-sky-100 text-sky-800",
+    };
+  }
+
   if (isWeekend(now)) {
     return {
       label: "Fim de semana",
@@ -164,7 +179,7 @@ export function buildStudentInsights(
       accessedToday: hasAccessedToday(student, now),
       dailyAccess,
       lastActivity: lastActivityAt(student),
-      needsAttention: dailyAccess.required && !dailyAccess.ok || (avgScore !== null && avgScore < 6),
+      needsAttention: (dailyAccess.required && !dailyAccess.ok) || (avgScore !== null && avgScore < 6),
     };
   });
 }

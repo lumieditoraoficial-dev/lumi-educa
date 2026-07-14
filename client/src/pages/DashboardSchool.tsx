@@ -3,6 +3,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { STUDENT_BREAK_DESCRIPTION, STUDENT_BREAK_LABEL, STUDENTS_ON_BREAK } from "@/lib/academicCalendar";
 import { buildClassInsights, buildStudentInsights, formatLastAccess, formatScore, isWeekend, toDate } from "@/lib/insights";
 import { ALL_SCHOOLS, getSchoolLabel, matchesSchool, normalizeSchoolId, type SchoolFilter } from "@/lib/schools";
 import { useSelectedSchoolFilter } from "@/lib/selectedSchool";
@@ -244,7 +245,7 @@ export default function DashboardSchool() {
               </Badge>
               <h1 className="mt-4 text-4xl font-black tracking-normal md:text-5xl">Visao da direcao</h1>
               <p className="mt-3 max-w-3xl text-lg leading-8 text-white/78">
-                Tudo que a escola precisa acompanhar: acesso diario, desempenho, turmas, equipe, livros, pendencias e relatorios.
+                Tudo que a escola precisa acompanhar: uso da plataforma, desempenho, turmas, equipe, livros, pendencias e relatorios.
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
                 {["Acesso real", "Dados por escola", "Relatorios para CP", "Fluxo de publicacao"].map((item) => (
@@ -276,13 +277,25 @@ export default function DashboardSchool() {
                   <p className="mt-1 font-bold">{formatDate(lastActivity)}</p>
                 </div>
                 <div className="rounded-lg bg-white/10 p-3">
-                  <p className="text-xs text-white/58">Acesso hoje</p>
+                  <p className="text-xs text-white/58">{STUDENTS_ON_BREAK ? "Usaram hoje" : "Acesso hoje"}</p>
                   <p className="mt-1 font-bold">{percent(accessedToday.length, students.length)}</p>
                 </div>
               </div>
             </div>
           </div>
         </section>
+
+        {STUDENTS_ON_BREAK ? (
+          <Card className="border-sky-200 bg-sky-50">
+            <CardContent className="flex flex-col gap-2 p-5 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="font-black text-sky-950">{STUDENT_BREAK_LABEL}</p>
+                <p className="mt-1 text-sm leading-6 text-sky-800">{STUDENT_BREAK_DESCRIPTION}</p>
+              </div>
+              <Badge className="w-fit bg-sky-100 text-sky-800">Sem cobranca de acesso diario</Badge>
+            </CardContent>
+          </Card>
+        ) : null}
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {[
@@ -397,10 +410,14 @@ export default function DashboardSchool() {
           <div className="space-y-4">
             <Card className="rounded-lg">
               <CardHeader>
-                <CardTitle>Acesso obrigatorio</CardTitle>
+                <CardTitle>{STUDENTS_ON_BREAK ? "Uso nas ferias" : "Acesso obrigatorio"}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {isWeekend(now) ? (
+                {STUDENTS_ON_BREAK ? (
+                  <p className="rounded-lg border border-sky-100 bg-sky-50 p-5 text-sm text-sky-800">
+                    Periodo de ferias: os alunos podem continuar usando a plataforma, sem pendencia por falta de acesso diario.
+                  </p>
+                ) : isWeekend(now) ? (
                   <p className="rounded-lg border border-dashed p-5 text-sm text-slate-600">
                     Sabado e domingo ficam fora da cobranca diaria.
                   </p>
@@ -549,7 +566,7 @@ export default function DashboardSchool() {
               <Wifi className="h-5 w-5 text-[#0F3D2E]" />
               <p className="mt-3 font-black text-slate-950">Rotina de uso</p>
               <p className="mt-1 text-sm leading-6 text-slate-600">
-                {accessedToday.length} de {students.length} alunos acessaram hoje. Ultimo movimento: {formatLastAccess(lastActivity)}.
+                {accessedToday.length} de {students.length} alunos usaram hoje. Ultimo movimento: {formatLastAccess(lastActivity)}.
               </p>
             </div>
             <div className="rounded-lg border bg-white p-4">

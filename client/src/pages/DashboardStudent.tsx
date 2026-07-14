@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { STUDENT_BREAK_DESCRIPTION, STUDENT_BREAK_LABEL, STUDENTS_ON_BREAK } from "@/lib/academicCalendar";
 import { trpc } from "@/lib/trpc";
 import { AlertCircle, BookOpen, CheckCircle, Clock, MessageSquareText, Plus, Sparkles, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -110,6 +111,18 @@ export default function DashboardStudent() {
             </div>
           </div>
         </div>
+
+        {STUDENTS_ON_BREAK ? (
+          <Card className="border-sky-200 bg-sky-50">
+            <CardContent className="flex flex-col gap-2 p-5 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="font-black text-sky-950">{STUDENT_BREAK_LABEL}</p>
+                <p className="mt-1 text-sm leading-6 text-sky-800">{STUDENT_BREAK_DESCRIPTION}</p>
+              </div>
+              <Badge className="w-fit bg-sky-100 text-sky-800">Uso livre</Badge>
+            </CardContent>
+          </Card>
+        ) : null}
 
         <div className="lumi-command-bar flex flex-col justify-between gap-3 rounded-lg p-4 sm:flex-row sm:items-center">
           <div>
