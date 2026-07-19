@@ -104,7 +104,7 @@ export default function Login() {
       <main className="relative z-10 mx-auto grid min-h-[calc(100vh-9rem)] w-full max-w-6xl items-center gap-10 px-4 pb-10 sm:px-6 lg:grid-cols-[minmax(0,0.9fr)_28rem] lg:px-8">
         <section className="hidden max-w-xl lg:block">
           <div className="lumi-login-mark">
-            <img src="/lumi-educa-mark.svg" alt="" className="h-24 w-24" />
+            <img src="/lumi-educa-mark.png" alt="" className="h-24 w-24 object-contain" />
           </div>
           <p className="mt-8 text-sm font-black uppercase tracking-[0.18em] text-[#266B3D]">Lumi Educa</p>
           <h1 className="mt-4 text-5xl font-black leading-tight tracking-normal text-[#0F3D2E]">

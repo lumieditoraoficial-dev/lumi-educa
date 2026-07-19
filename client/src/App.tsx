@@ -29,7 +29,7 @@ function PageLoading() {
   return (
     <div className="grid min-h-screen place-items-center bg-[#F4F8F1] px-6 text-center text-[#0F3D2E]">
       <div>
-        <img src="/lumi-educa-mark.svg" alt="" className="mx-auto h-16 w-16 animate-pulse" />
+        <img src="/lumi-educa-mark.png" alt="" className="mx-auto h-16 w-16 animate-pulse object-contain" />
         <p className="mt-4 text-lg font-black">Lumi Educa</p>
         <p className="mt-1 text-sm text-slate-500">Carregando seu ambiente...</p>
       </div>

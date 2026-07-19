@@ -24,7 +24,7 @@ export default function BrandLogo({
     <div className={`inline-flex items-center gap-2.5 ${className}`}>
       <span className={`flex shrink-0 items-center justify-center ${markSize} ${markClassName}`}>
         <img
-          src={inverted ? "/lumi-educa-mark-inverted.svg" : "/lumi-educa-mark.svg"}
+          src={inverted ? "/lumi-educa-mark-inverted.png" : "/lumi-educa-mark.png"}
           alt=""
           className="h-full w-full object-contain"
           draggable={false}
