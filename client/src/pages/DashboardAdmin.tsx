@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSelectedSchoolFilter } from "@/lib/selectedSchool";
 import { ALL_SCHOOLS, SCHOOL_OPTIONS, getSchoolLabel, matchesSchool, normalizeSchoolId } from "@/lib/schools";
 import { trpc } from "@/lib/trpc";
-import { Activity, ArrowLeft, BookOpen, Database, Eye, Settings, ShieldCheck, Trophy, Users } from "lucide-react";
+import { Activity, ArrowLeft, BookOpen, Database, Eye, Settings, ShieldCheck, Users } from "lucide-react";
 import { useState } from "react";
 import AdminActivity from "./AdminActivity";
 import AdminBookObserver from "./AdminBookObserver";
@@ -69,7 +69,7 @@ export default function DashboardAdmin() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div className="lumi-cup-surface lumi-field-lines overflow-hidden rounded-xl p-6 text-white shadow-xl">
+        <div className="lumi-brand-surface lumi-grid-lines overflow-hidden rounded-xl p-6 text-white shadow-xl">
           <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
             <div>
               <div className="flex items-center gap-3">
@@ -82,7 +82,7 @@ export default function DashboardAdmin() {
             </div>
             <div className="rounded-lg border border-white/16 bg-white/10 p-4 backdrop-blur">
               <div className="flex items-center gap-3">
-                <Trophy className="h-8 w-8 text-[#F4C430]" />
+                <Activity className="h-8 w-8 text-[#F4C430]" />
                 <div>
                   <p className="text-sm text-white/65">Acompanhamento</p>
                   <p className="text-xl font-bold">Rede ativa</p>
@@ -107,7 +107,7 @@ export default function DashboardAdmin() {
                     <p className="text-sm text-slate-600">{stat.label}</p>
                     <p className="mt-1 text-3xl font-bold text-slate-950">{stat.value}</p>
                   </div>
-                  <Icon className="h-8 w-8 text-[#123C8C]" />
+                  <Icon className="h-8 w-8 text-[#266B3D]" />
                 </CardContent>
               </Card>
             );
@@ -116,7 +116,7 @@ export default function DashboardAdmin() {
 
         <div className="grid gap-4 md:grid-cols-2">
           {schoolSummaries.map((school) => (
-            <Card key={school.id} className="lumi-cup-card rounded-lg">
+            <Card key={school.id} className="lumi-surface-card rounded-lg">
               <CardHeader>
                 <CardTitle>{school.label}</CardTitle>
               </CardHeader>
@@ -177,10 +177,10 @@ export default function DashboardAdmin() {
           ].map((section) => {
             const Icon = section.icon;
             return (
-              <Card key={section.id} className="lumi-cup-card rounded-lg">
+              <Card key={section.id} className="lumi-surface-card rounded-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Icon className="h-5 w-5 text-[#123C8C]" />
+                    <Icon className="h-5 w-5 text-[#266B3D]" />
                     {section.title}
                   </CardTitle>
                 </CardHeader>
@@ -198,7 +198,7 @@ export default function DashboardAdmin() {
           })}
         </div>
 
-        <Card className="lumi-cup-card rounded-lg">
+        <Card className="lumi-surface-card rounded-lg">
           <CardHeader>
             <CardTitle>Resumo de publicação</CardTitle>
           </CardHeader>

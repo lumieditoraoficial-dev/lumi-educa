@@ -1,4 +1,4 @@
-import { STUDENT_BREAK_LABEL, STUDENTS_ON_BREAK } from "./academicCalendar";
+import { STUDENT_BREAK_LABEL, isStudentBreakDate } from "./academicCalendar";
 
 export const ONLINE_WINDOW_MS = 75_000;
 
@@ -61,12 +61,12 @@ export function hasAccessedToday(user: AnyUser, now = new Date()) {
   return activity.toDateString() === now.toDateString();
 }
 
-export function isStudentOnBreak(user: AnyUser) {
-  return STUDENTS_ON_BREAK && user.role === "student";
+export function isStudentOnBreak(user: AnyUser, now = new Date()) {
+  return isStudentBreakDate(now) && user.role === "student";
 }
 
 export function dailyAccessStatus(user: AnyUser, now = new Date()) {
-  if (isStudentOnBreak(user)) {
+  if (isStudentOnBreak(user, now)) {
     return {
       label: `${STUDENT_BREAK_LABEL} - uso livre`,
       ok: true,

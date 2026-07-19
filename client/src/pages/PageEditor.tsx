@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { usePageSeo } from "@/lib/seo";
 import { trpc } from "@/lib/trpc";
 import {
   AlignCenter,
@@ -247,6 +248,12 @@ export default function PageEditor() {
   const utils = trpc.useUtils();
   const { data: book } = trpc.books.getBook.useQuery({ bookId }, { enabled: Boolean(bookId) });
   const { data: pages = [] } = trpc.books.getPages.useQuery({ bookId }, { enabled: Boolean(bookId) });
+  usePageSeo({
+    title: book?.title ? `Escrever ${book.title} | Lumi Educa` : "Escrever livro | Lumi Educa",
+    description: "Editor de livros Lumi Educa.",
+    canonicalPath: "/page-editor",
+    robots: "noindex, nofollow",
+  });
   const updatePageMutation = trpc.books.updatePageContent.useMutation();
   const currentPage = pages.find((page) => page.id === pageId);
   const pageIsLocked = currentPage?.status === "published" || (book?.status === "published" && currentPage?.status === "approved");
@@ -340,6 +347,28 @@ export default function PageEditor() {
     },
     [bookId, canEdit, content, fontSize, getCleanEditorHtml, pageCount, pageId, title, updatePageMutation, utils.books.getBook, utils.books.getPages, utils.books.listBooks, utils.books.myBooks]
   );
+
+  useEffect(() => {
+    if (!currentPage || !canEdit || dirtyRef.current) return;
+    const savedPageCount = parseSavedContent(currentPage.content ?? "").pageCount;
+    if (savedPageCount === pageCount) return;
+
+    const timer = window.setTimeout(() => {
+      void handleSave(content, title, false, fontSize);
+    }, 1200);
+
+    return () => window.clearTimeout(timer);
+  }, [canEdit, content, currentPage, fontSize, handleSave, pageCount, title]);
+
+  useEffect(() => {
+    return () => {
+      if (!bookId) return;
+      void utils.books.getBook.invalidate({ bookId });
+      void utils.books.getPages.invalidate({ bookId });
+      void utils.books.myBooks.invalidate();
+      void utils.books.listBooks.invalidate();
+    };
+  }, [bookId]);
 
   const scheduleAutoSave = (nextContent = content, nextTitle = title, nextFontSize = fontSize) => {
     if (!canEdit) return;

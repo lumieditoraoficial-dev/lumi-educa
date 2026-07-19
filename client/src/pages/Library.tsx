@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePageSeo } from "@/lib/seo";
 import { trpc } from "@/lib/trpc";
-import { BookOpen, Search, Star, Trophy } from "lucide-react";
+import { BookOpen, Search, Star } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
 
@@ -29,10 +29,7 @@ export default function Library() {
 
   return (
     <div className="lumi-page-aura min-h-screen">
-      <div className="lumi-cup-surface lumi-field-lines relative overflow-hidden px-4 py-14 text-white sm:px-6 lg:px-8">
-        <div className="absolute bottom-0 right-0 h-44 w-72 bg-[#266B3D]" style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%, 40% 46%)" }} />
-        <div className="absolute bottom-0 right-0 h-36 w-52 bg-[#F4C430]" style={{ clipPath: "polygon(100% 0, 100% 100%, 26% 100%, 0 50%)" }} />
-        <div className="absolute bottom-0 right-32 h-24 w-36 bg-[#123C8C]" style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }} />
+      <div className="lumi-brand-surface lumi-grid-lines relative overflow-hidden border-b-4 border-[#F4C430] px-4 py-14 text-white sm:px-6 lg:px-8">
         <div className="relative mx-auto max-w-7xl">
           <div className="mb-5">
             <BrandLogo inverted showTagline />
@@ -43,7 +40,7 @@ export default function Library() {
             </div>
             <div className="rounded-lg border border-white/16 bg-white/10 p-4 backdrop-blur">
               <div className="flex items-center gap-3">
-                <Trophy className="h-7 w-7 text-[#F4C430]" />
+                <BookOpen className="h-7 w-7 text-[#F4C430]" />
                 <div>
                   <p className="text-sm text-white/65">Livros publicados</p>
                   <p className="text-2xl font-bold text-white">{books?.length ?? 0}</p>
@@ -113,12 +110,12 @@ export default function Library() {
               return (
                 <Card key={pub.id} className="lumi-premium-card overflow-hidden rounded-lg transition-transform hover:-translate-y-1 hover:shadow-xl">
                   {book.coverImageUrl ? (
-                    <div className="flex h-48 items-center justify-center bg-gradient-to-br from-[#0F3D2E] via-[#123C8C] to-[#F4C430]">
+                    <div className="flex h-48 items-center justify-center bg-[#EEF4E3]">
                       <img src={book.coverImageUrl} alt={book.title} className="h-full w-full object-cover" />
                     </div>
                   ) : (
-                    <div className="lumi-field-lines flex h-48 items-center justify-center bg-gradient-to-br from-[#0F3D2E] via-[#123C8C] to-[#F4C430]">
-                      <BookOpen className="h-16 w-16 text-white opacity-65" />
+                    <div className="flex h-48 items-center justify-center bg-[#EEF4E3]">
+                      <BookOpen className="h-16 w-16 text-[#266B3D] opacity-65" />
                     </div>
                   )}
 

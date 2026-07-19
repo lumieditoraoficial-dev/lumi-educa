@@ -23,7 +23,7 @@ import {
 import { useIsMobile } from "@/hooks/useMobile";
 import { getSchoolLabel, normalizeSchoolId } from "@/lib/schools";
 import { useSelectedSchoolFilter } from "@/lib/selectedSchool";
-import { Bell, BookOpen, Building2, GraduationCap, LayoutDashboard, Library, LogOut, MessageCircle, PanelLeft, Repeat2, Server, Settings, ShieldCheck, Trophy, UserRound, Users } from "lucide-react";
+import { Bell, BookOpen, Building2, CircleCheck, GraduationCap, LayoutDashboard, Library, LogOut, MessageCircle, PanelLeft, Repeat2, Server, Settings, ShieldCheck, UserRound, Users } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -67,7 +67,7 @@ export default function DashboardLayout({
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
           <div className="flex flex-col items-center gap-6">
-            <h1 className="text-2xl font-semibold tracking-tight text-center">
+            <h1 className="text-2xl font-semibold tracking-normal text-center">
               Sign in to continue
             </h1>
             <p className="text-sm text-muted-foreground text-center max-w-sm">
@@ -168,6 +168,11 @@ function DashboardLayoutContent({
       : []),
   ];
   const activeMenuItem = menuItems.find(item => item.path === location);
+
+  useEffect(() => {
+    const panelName = activeMenuItem?.label ?? "Painel";
+    document.title = `${panelName} | Lumi Educa`;
+  }, [activeMenuItem?.label]);
   const masterRoles = [
     { role: "coordinator", label: "Portal Escola", path: "/dashboard/school", entry: "school-portal" },
     { role: "student", label: "Aluno" },
@@ -281,7 +286,7 @@ function DashboardLayoutContent({
               </button>
               {!isCollapsed ? (
                 <div className="flex min-w-0 items-center gap-2">
-                  <BrandLogo compact markClassName="h-8 w-8" textClassName="text-lg" />
+                  <BrandLogo inverted compact markClassName="h-8 w-8" textClassName="text-lg" />
                 </div>
               ) : null}
             </div>
@@ -394,14 +399,14 @@ function DashboardLayoutContent({
         />
       </div>
 
-      <SidebarInset className="lumi-cup-dashboard">
+      <SidebarInset className="lumi-dashboard-surface">
         {isMobile && (
           <div className="flex border-b h-14 items-center justify-between bg-white/95 px-2 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />
               <div className="flex items-center gap-3">
                 <div className="flex flex-col gap-1">
-                  <span className="tracking-tight text-foreground">
+                  <span className="tracking-normal text-foreground">
                     {activeMenuItem?.label ?? "Menu"}
                   </span>
                 </div>
@@ -428,7 +433,7 @@ function DashboardLayoutContent({
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#F4C430]/45 bg-[#fff8d7] px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-[#0F3D2E]">
-                  <Trophy className="h-3.5 w-3.5" />
+                  <CircleCheck className="h-3.5 w-3.5" />
                   Rotina ativa
                 </span>
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#0F3D2E]/10 bg-white px-3 py-1 text-xs font-semibold text-slate-600">

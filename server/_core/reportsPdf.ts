@@ -3,12 +3,12 @@ import PDFDocument from "pdfkit";
 import { getAllBooks, listEvaluations, listSchools, listUsers } from "../db";
 import { canSeeAllSchools, normalizeSchoolId, sameSchool } from "./schools";
 import { sdk } from "./sdk";
+import { isStudentBreakDate } from "../../shared/academicCalendar";
 
 const reportRoles = new Set(["editor", "coordinator", "admin"]);
-const STUDENT_BREAK_END_AT = new Date("2026-07-24T23:59:59-03:00");
 
 function studentsOnBreak() {
-  return Date.now() <= STUDENT_BREAK_END_AT.getTime();
+  return isStudentBreakDate();
 }
 
 function numberValue(value: unknown) {
@@ -174,7 +174,7 @@ function writeStudentSummary(doc: PDFKit.PDFDocument, student: any, books: any[]
   } else if (!studentsOnBreak() && !accessedToday(student)) {
     doc.text("Encaminhamento: lembrar rotina de acesso diario e acompanhar retomada na semana.", { lineGap: 3 });
   } else if (studentsOnBreak()) {
-    doc.text("Encaminhamento: periodo de ferias ativo ate 24/07/2026; manter uso livre e incentivar escrita espontanea.", { lineGap: 3 });
+    doc.text("Encaminhamento: recesso escolar de 13/07 a 17/07; manter uso livre e incentivar escrita espontanea.", { lineGap: 3 });
   } else {
     doc.text("Encaminhamento: manter ritmo de escrita, revisoes curtas e metas progressivas.", { lineGap: 3 });
   }
@@ -228,7 +228,8 @@ export function registerReportsPdfRoutes(app: Express) {
       stat(doc, "Palavras no mes", monthlyBooks.reduce((sum, book) => sum + numberValue(book.wordCount), 0));
       stat(doc, "Livros publicados", monthlyBooks.filter((book) => book.status === "published").length);
       stat(doc, "Media de notas", average(monthlyScores)?.toFixed(1) ?? "-");
-      stat(doc, "Periodo escolar", studentsOnBreak() ? "Ferias ate 24/07/2026 - uso livre" : "Aulas - acesso diario ativo");
+      stat(doc, "Periodo escolar", studentsOnBreak() ? "Recesso de 13/07 a 17/07 - uso livre" : "Aulas - acesso diario ativo");
+      stat(doc, "Recesso registrado", "13/07 a 17/07/2026 - sem cobranca e sem falta");
       stat(doc, accessSummaryLabel(), visibleStudents.filter((student) => accessedToday(student)).length);
 
       doc.moveDown(1).fillColor("#0F3D2E").font("Helvetica-Bold").fontSize(14).text("Leitura para coordenacao pedagogica");
@@ -239,8 +240,8 @@ export function registerReportsPdfRoutes(app: Express) {
         .fontSize(11)
         .text(
           studentsOnBreak()
-            ? "Este relatorio consolida uso nas ferias, escrita, avaliacao e publicacao. O acesso diario nao gera pendencia ate 24/07/2026, mas o uso espontaneo segue sendo acompanhado."
-            : "Este relatorio consolida acesso, escrita, avaliacao e publicacao. Use os alertas para planejar devolutivas, chamadas de acesso diario e metas de producao textual por turma.",
+            ? "Este relatorio consolida uso no recesso, escrita, avaliacao e publicacao. Entre 13/07 e 17/07 o acesso nao gera falta, mas o uso espontaneo segue sendo acompanhado."
+            : "Este relatorio consolida acesso, escrita, avaliacao e publicacao. O recesso de 13/07 a 17/07 foi registrado sem faltas. Use os alertas para planejar devolutivas e metas de producao textual por turma.",
           { lineGap: 4 }
         );
 

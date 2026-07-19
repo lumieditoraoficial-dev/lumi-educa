@@ -130,7 +130,7 @@ export default function SystemStatus() {
                     <p className="text-sm text-slate-600">{item.label}</p>
                     <p className="mt-1 text-2xl font-bold text-slate-950">{item.value}</p>
                   </div>
-                  <Icon className="h-7 w-7 text-[#123C8C]" />
+                  <Icon className="h-7 w-7 text-[#266B3D]" />
                 </CardContent>
               </Card>
             );
@@ -141,7 +141,7 @@ export default function SystemStatus() {
           <Card className="rounded-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Server className="h-5 w-5 text-[#123C8C]" />
+                <Server className="h-5 w-5 text-[#266B3D]" />
                 Verificações principais
               </CardTitle>
             </CardHeader>

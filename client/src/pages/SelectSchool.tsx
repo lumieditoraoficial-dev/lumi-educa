@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { usePageSeo } from "@/lib/seo";
 import { SCHOOL_OPTIONS, normalizeSchoolId } from "@/lib/schools";
 import { setStoredSchoolFilter } from "@/lib/selectedSchool";
 import { trpc } from "@/lib/trpc";
@@ -74,6 +75,12 @@ export default function SelectSchool() {
   const [, navigate] = useLocation();
   const utils = trpc.useUtils();
   const [editingSchool, setEditingSchool] = useState<SchoolForm | null>(null);
+  usePageSeo({
+    title: "Selecionar escola | Lumi Educa",
+    description: "Selecao da unidade escolar.",
+    canonicalPath: "/select-school",
+    robots: "noindex, nofollow",
+  });
   const isInternalAccess = Boolean(user && user.id < 0);
   const canChooseAll = isInternalAccess && (user?.role === "admin" || user?.role === "editor");
   const canEditSchools = isInternalAccess && ["admin", "editor"].includes(user?.role ?? "");
@@ -225,20 +232,11 @@ export default function SelectSchool() {
 
         <main className="flex flex-1 flex-col justify-center py-10">
           <div className="lumi-school-ribbon rounded-lg p-6 md:p-8">
-            <p className="text-sm font-black uppercase tracking-[0.2em] text-[#266B3D]">Selecionar escola</p>
-            <h1 className="mt-3 max-w-4xl text-4xl font-black tracking-normal text-slate-950 md:text-5xl">
-              Escolha a unidade escolar.
-            </h1>
+            <p className="text-sm font-black uppercase tracking-[0.2em] text-[#266B3D]">Acesso interno</p>
+            <h1 className="mt-3 max-w-4xl text-4xl font-black tracking-normal text-slate-950 md:text-5xl">Selecionar unidade</h1>
             <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-600">
-              Entre na unidade correta para ver turmas, alunos, livros, relatorios e identidade da escola.
+              {schoolCards.length === 1 ? "1 escola disponivel." : `${schoolCards.length} escolas disponiveis.`}
             </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              {["Unidade", "Turmas", "Relatorios"].map((item) => (
-                <span key={item} className="rounded-full border border-[#0F3D2E]/10 bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-[#0F3D2E]">
-                  {item}
-                </span>
-              ))}
-            </div>
           </div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2">
@@ -271,7 +269,7 @@ export default function SelectSchool() {
                 <CardContent className="space-y-5 p-5">
                   <div className="grid gap-3 sm:grid-cols-3">
                     <div className="rounded-lg border border-[#0F3D2E]/8 bg-white/78 p-3">
-                      <Users className="h-4 w-4 text-[#123C8C]" />
+                      <Users className="h-4 w-4 text-[#266B3D]" />
                       <p className="mt-2 text-2xl font-bold text-slate-950">{school.students}</p>
                       <p className="text-xs text-slate-500">alunos</p>
                     </div>

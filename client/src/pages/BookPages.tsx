@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { usePageSeo } from "@/lib/seo";
 import { trpc } from "@/lib/trpc";
 import { ArrowLeft, BookOpen, CheckCircle2, FileText, Loader2, MessageSquareText, Send, Sparkles, Trash2 } from "lucide-react";
 import { useMemo } from "react";
@@ -28,6 +29,13 @@ function countWords(content?: string | null) {
   return extractPageHtml(content).replace(/<[^>]*>/g, " ").trim().split(/\s+/).filter(Boolean).length;
 }
 
+function countVisualPages(content?: string | null) {
+  const match = (content ?? "").match(/data-lumi-page-count=["'](\d+)["']/i);
+  const savedCount = match ? Number(match[1]) : 0;
+  if (Number.isFinite(savedCount) && savedCount > 0) return savedCount;
+  return Math.max(1, Math.ceil(countWords(content) / 330));
+}
+
 function formatScore(score: unknown) {
   const value = Number(score ?? 0);
   return Number.isFinite(value) ? value.toFixed(1) : "-";
@@ -44,6 +52,12 @@ export default function BookPages({ bookId }: { bookId: number }) {
     { bookId },
     { enabled: Boolean(bookId && user) }
   );
+  usePageSeo({
+    title: book?.title ? `${book.title} | Lumi Educa` : "Livro | Lumi Educa",
+    description: "Ambiente de escrita e revisao do livro.",
+    canonicalPath: `/books/${bookId}/pages`,
+    robots: "noindex, nofollow",
+  });
 
   const sortedPages = useMemo(() => pages.slice().sort((a, b) => a.pageNumber - b.pageNumber), [pages]);
   const nextPageNumber = useMemo(
@@ -118,7 +132,8 @@ export default function BookPages({ bookId }: { bookId: number }) {
   const activeWritingPage = reviewablePages[0] ?? null;
   const canSubmitForReview = canEdit && reviewablePages.length > 0;
   const totalWords = sortedPages.reduce((total, page) => total + countWords(page.content), 0);
-  const estimatedPrintedPages = Math.max(book.pageCount ?? 0, sortedPages.length ? sortedPages.length : 1, Math.ceil(totalWords / 330));
+  const visualPages = sortedPages.reduce((total, page) => total + countVisualPages(page.content), 0);
+  const estimatedPrintedPages = Math.max(book.pageCount ?? 0, visualPages, sortedPages.length ? sortedPages.length : 1);
   const openWritingStudio = () => {
     if (!canEdit) return;
     if (activeWritingPage) {
@@ -184,11 +199,11 @@ export default function BookPages({ bookId }: { bookId: number }) {
 
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-8">
         {canEdit && (
-          <Card className="lumi-brazil-panel overflow-hidden border-0 p-0 text-white shadow-xl">
+          <Card className="lumi-highlight-panel overflow-hidden border-0 p-0 text-white shadow-xl">
             <CardContent className="relative grid gap-6 p-6 md:grid-cols-[minmax(0,1fr)_18rem] md:p-8">
               <div>
                 <Badge className="bg-white/15 text-white hover:bg-white/20">Livro contínuo</Badge>
-                <h2 className="mt-4 text-3xl font-black tracking-tight">Documento do livro</h2>
+                <h2 className="mt-4 text-3xl font-black tracking-normal">Documento do livro</h2>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-white/82">
                   Documento único do livro, com imagens, corte automático de páginas e continuidade liberada para novas entregas.
                 </p>
@@ -224,7 +239,7 @@ export default function BookPages({ bookId }: { bookId: number }) {
         )}
 
         {evaluations.length > 0 && (
-          <Card className="lumi-cup-card">
+          <Card className="lumi-surface-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquareText className="h-5 w-5 text-emerald-700" />
@@ -253,7 +268,7 @@ export default function BookPages({ bookId }: { bookId: number }) {
         )}
 
         {isStaff && (
-          <Card className="lumi-cup-card">
+          <Card className="lumi-surface-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-emerald-700" />
@@ -302,7 +317,7 @@ export default function BookPages({ bookId }: { bookId: number }) {
         )}
 
         {sortedPages.length > 0 && (
-          <Card className="lumi-cup-card">
+          <Card className="lumi-surface-card">
             <CardHeader>
               <CardTitle>Leitura do ebook</CardTitle>
             </CardHeader>
@@ -335,7 +350,7 @@ export default function BookPages({ bookId }: { bookId: number }) {
           </Card>
         )}
 
-        <Card className="lumi-cup-card">
+        <Card className="lumi-surface-card">
           <CardHeader>
             <CardTitle>Partes salvas do livro</CardTitle>
           </CardHeader>

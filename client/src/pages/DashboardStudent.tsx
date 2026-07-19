@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { STUDENT_BREAK_DESCRIPTION, STUDENT_BREAK_LABEL, STUDENTS_ON_BREAK } from "@/lib/academicCalendar";
 import { trpc } from "@/lib/trpc";
-import { AlertCircle, BookOpen, CheckCircle, Clock, MessageSquareText, Plus, Sparkles, TrendingUp } from "lucide-react";
+import { AlertCircle, BookOpen, CheckCircle, Clock, MessageSquareText, PenLine, Plus, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -61,6 +61,16 @@ export default function DashboardStudent() {
     }
     return map;
   }, [evaluations]);
+  const latestBook = useMemo(
+    () =>
+      books
+        .slice()
+        .sort((left, right) => new Date(right.updatedAt ?? 0).getTime() - new Date(left.updatedAt ?? 0).getTime())[0],
+    [books]
+  );
+  const draftCount = books.filter((book) => book.status === "draft").length;
+  const reviewCount = books.filter((book) => ["submitted", "under_review"].includes(book.status ?? "")).length;
+  const publishedCount = books.filter((book) => book.status === "published").length;
 
   const createBookMutation = trpc.books.createBook.useMutation({
     onSuccess: async (book: any) => {
@@ -83,31 +93,36 @@ export default function DashboardStudent() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div className="lumi-brazil-panel rounded-lg p-6 text-white shadow-xl md:p-8">
+        <div className="lumi-highlight-panel rounded-lg p-6 text-white shadow-xl md:p-8">
           <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_18rem] md:items-center">
             <div>
-              <Badge className="bg-white/15 text-white hover:bg-white/20">Autoria jovem</Badge>
-              <h1 className="mt-4 text-4xl font-black tracking-tight md:text-5xl">Meus livros</h1>
+              <Badge className="bg-white/15 text-white hover:bg-white/20">Biblioteca pessoal</Badge>
+              <h1 className="mt-4 text-4xl font-black tracking-normal md:text-5xl">Meus livros</h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-white/82">
-                Sua biblioteca de escrita, revisoes recebidas, metas e livros em andamento.
+                {books.length === 1 ? "1 livro na sua conta." : `${books.length} livros na sua conta.`}
               </p>
               <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold text-white/85">
-                <span className="rounded-full bg-white/12 px-3 py-1">Quebra de pagina</span>
-                <span className="rounded-full bg-white/12 px-3 py-1">Imagens no texto</span>
-                <span className="rounded-full bg-white/12 px-3 py-1">Envio de paginas novas</span>
+                <span className="rounded-full bg-white/12 px-3 py-1">{draftCount} rascunhos</span>
+                <span className="rounded-full bg-white/12 px-3 py-1">{reviewCount} em avaliacao</span>
+                <span className="rounded-full bg-white/12 px-3 py-1">{publishedCount} publicados</span>
               </div>
             </div>
             <div className="rounded-lg border border-white/15 bg-white/10 p-4 backdrop-blur">
               <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-yellow-300 p-3 text-emerald-950">
-                  <Sparkles className="h-6 w-6" />
+                  <PenLine className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="text-sm text-white/70">Proximo passo</p>
-                  <p className="font-bold">Continuar escrevendo</p>
+                  <p className="text-sm text-white/70">{latestBook ? "Ultimo livro" : "Comece agora"}</p>
+                  <p className="line-clamp-2 font-bold">{latestBook?.title ?? "Novo livro"}</p>
                 </div>
               </div>
-              <p className="mt-4 text-sm leading-6 text-white/75">Abra seu livro, continue o texto e salve novas versoes com seguranca.</p>
+              <Button
+                className="mt-4 w-full bg-[#F4C430] font-bold text-[#0F3D2E] hover:bg-[#F8D94E]"
+                onClick={() => (latestBook ? navigate(`/books/${latestBook.id}/pages`) : setIsCreatingBook(true))}
+              >
+                {latestBook ? "Continuar escrevendo" : "Criar livro"}
+              </Button>
             </div>
           </div>
         </div>
@@ -202,7 +217,7 @@ export default function DashboardStudent() {
         </div>
 
         {evaluations.length > 0 && (
-          <Card className="lumi-cup-card">
+          <Card className="lumi-surface-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquareText className="h-5 w-5 text-emerald-700" />
@@ -250,7 +265,7 @@ export default function DashboardStudent() {
               {books.map((book) => {
                 const latestEvaluation = latestEvaluationByBook.get(book.id);
                 return (
-                  <Card key={book.id} className="lumi-cup-card overflow-hidden transition hover:-translate-y-0.5 hover:shadow-xl">
+                  <Card key={book.id} className="lumi-surface-card overflow-hidden transition hover:-translate-y-0.5 hover:shadow-xl">
                     <CardHeader>
                       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
                         <div>

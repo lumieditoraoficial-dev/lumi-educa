@@ -1,7 +1,9 @@
 import BrandLogo from "@/components/BrandLogo";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { usePageSeo } from "@/lib/seo";
-import { ArrowRight, BookOpen, Building2, Library, LockKeyhole, PenLine, ShieldCheck } from "lucide-react";
+import { trpc } from "@/lib/trpc";
+import { ArrowRight, BookOpen, Library, LogIn, PenLine } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 
@@ -12,39 +14,15 @@ const quotes = [
   "Toda historia comeca quando alguem decide continuar.",
 ];
 
-const accessCards = [
-  {
-    title: "Entrar",
-    label: "Entrar",
-    path: "/login",
-    icon: LockKeyhole,
-  },
-  {
-    title: "Biblioteca digital",
-    label: "Ler obras",
-    path: "/library",
-    icon: Library,
-  },
-  {
-    title: "Area da escola",
-    label: "Acesso oficial",
-    path: "/login",
-    icon: Building2,
-  },
-];
-
-const officialFlow = [
-  { label: "Escrita", icon: PenLine },
-  { label: "Acompanhamento", icon: ShieldCheck },
-  { label: "Publicacao", icon: BookOpen },
-];
-
 export default function Home() {
   const [, navigate] = useLocation();
   const [quoteIndex, setQuoteIndex] = useState(0);
+  const { data: publications = [], isLoading } = trpc.library.getPublishedBooks.useQuery({});
+  const featured = publications.slice(0, 3);
+
   usePageSeo({
     title: "Lumi Educa | Autoria estudantil e biblioteca digital",
-    description: "Lumi Educa e o portal de autoria estudantil para escrita de livros, acompanhamento pedagogico e biblioteca digital escolar.",
+    description: "Portal Lumi Educa para escrita, acompanhamento pedagogico e publicacao de livros estudantis.",
     canonicalPath: "/",
   });
 
@@ -57,118 +35,107 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#F8F7EB] text-[#0F3D2E]">
-      <nav className="fixed left-0 right-0 top-0 z-50 border-b border-white/12 bg-[#06271f]/66 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-          <button type="button" onClick={() => navigate("/")} className="rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430]">
-            <BrandLogo inverted compact />
+    <div className="lumi-public-shell min-h-screen text-[#13251D]">
+      <header className="sticky top-0 z-50 border-b border-[#0F3D2E]/10 bg-white/94 backdrop-blur-xl">
+        <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <button type="button" onClick={() => navigate("/")} className="rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6DB33F]">
+            <BrandLogo compact />
           </button>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" className="hidden text-white/86 hover:bg-white/10 hover:text-white sm:inline-flex" onClick={() => navigate("/library")}>
+          <nav className="flex items-center gap-2" aria-label="Navegacao principal">
+            <Button variant="ghost" className="hidden gap-2 text-[#0F3D2E] hover:bg-[#EEF4E3] sm:inline-flex" onClick={() => navigate("/library")}>
+              <Library className="h-4 w-4" />
               Biblioteca
             </Button>
-            <Button className="bg-[#F4C430] font-bold text-[#0F3D2E] hover:bg-[#ffdc3b]" onClick={() => navigate("/login")}>
+            <Button className="gap-2 bg-[#0F3D2E] font-bold text-white hover:bg-[#18513D]" onClick={() => navigate("/login")}>
+              <LogIn className="h-4 w-4" />
               Entrar
             </Button>
-          </div>
+          </nav>
         </div>
-      </nav>
+      </header>
 
       <main>
-        <section className="lumi-hero-stage relative isolate min-h-screen text-[#F7F3E9]">
-          <div className="absolute inset-0 bg-cover bg-center opacity-[0.46]" style={{ backgroundImage: "url('/lumi-hero-dashboard.jpg')" }} />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,16,13,0.92),rgba(6,36,25,0.8)_48%,rgba(5,20,45,0.68))]" />
-
-          <div className="relative mx-auto flex min-h-screen max-w-7xl items-center px-4 pb-12 pt-24 sm:px-6 lg:px-8">
-            <div className="grid w-full gap-10 lg:grid-cols-[minmax(0,1fr)_28rem] lg:items-center">
-              <section className="max-w-4xl">
-                <div className="mb-7">
-                  <BrandLogo inverted showTagline />
-                </div>
-                <h1 className="max-w-4xl text-5xl font-black leading-[0.98] tracking-normal sm:text-6xl lg:text-7xl">
-                  Lumi Educa
-                </h1>
-
-                <div className="mt-8 min-h-[4.5rem] max-w-2xl border-l-4 border-[#F4C430] pl-5">
-                  <p className="mt-2 text-lg leading-7 text-white">{quotes[quoteIndex]}</p>
-                </div>
-
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <Button size="lg" className="h-12 bg-[#F4C430] px-7 font-black text-[#0F3D2E] hover:bg-[#ffdc3b]" onClick={() => navigate("/login")}>
-                    Entrar na conta
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="h-12 border-white/45 bg-white/8 px-7 font-bold text-white hover:bg-white/14"
-                    onClick={() => navigate("/library")}
-                  >
-                    Biblioteca digital
-                  </Button>
-                </div>
-
-                <div className="mt-8 grid max-w-3xl gap-3 sm:grid-cols-3">
-                  {officialFlow.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <div key={item.label} className="rounded-lg border border-white/14 bg-white/10 p-4 backdrop-blur">
-                        <Icon className="h-5 w-5 text-[#F4C430]" />
-                        <p className="mt-3 font-black text-white">{item.label}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-
-              <aside className="lumi-glass-panel rounded-lg p-5">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <h2 className="mt-2 text-2xl font-black text-white">Portal da escola</h2>
-                  </div>
-                  <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-[#F4C430] text-[#0F3D2E]">
-                    <BookOpen className="h-7 w-7" />
-                  </div>
-                </div>
-
-                <div className="mt-6 space-y-3">
-                  {accessCards.map((card) => {
-                    const Icon = card.icon;
-                    return (
-                      <button
-                        key={card.title}
-                        type="button"
-                        onClick={() => navigate(card.path)}
-                        className="flex w-full items-center justify-between gap-3 rounded-lg border border-white/14 bg-white/10 p-4 text-left transition hover:border-[#F4C430]/60 hover:bg-white/16"
-                      >
-                        <span className="flex items-center gap-3">
-                          <span className="flex h-10 w-10 items-center justify-center rounded-md bg-white text-[#0F3D2E]">
-                            <Icon className="h-5 w-5" />
-                          </span>
-                          <span>
-                            <span className="block font-bold text-white">{card.title}</span>
-                            <span className="text-sm text-white/65">{card.label}</span>
-                          </span>
-                        </span>
-                        <ArrowRight className="h-4 w-4 text-[#F4C430]" />
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-5 rounded-lg bg-[#F4C430] p-4 text-sm font-black uppercase tracking-[0.16em] text-[#0F3D2E]">
-                  Acesso escolar ativo
-                </div>
-              </aside>
+        <section className="lumi-public-hero border-b border-[#0F3D2E]/10">
+          <div className="mx-auto grid min-h-[76vh] max-w-7xl gap-12 px-4 py-14 sm:px-6 md:py-18 lg:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.75fr)] lg:items-center lg:px-8">
+            <div className="max-w-3xl">
+              <Badge className="border border-[#266B3D]/20 bg-white px-3 py-1 text-[#266B3D] shadow-sm hover:bg-white">
+                Plataforma escolar
+              </Badge>
+              <h1 className="mt-6 text-5xl font-black leading-[1.02] tracking-normal text-[#0F3D2E] sm:text-6xl lg:text-7xl">
+                Lumi <span className="text-[#5AAE35]">educa</span>
+              </h1>
+              <div className="mt-7 min-h-20 max-w-2xl border-l-4 border-[#F4C430] pl-5" aria-live="polite">
+                <p className="text-xl font-semibold leading-8 text-slate-700 sm:text-2xl">{quotes[quoteIndex]}</p>
+              </div>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Button size="lg" className="h-12 gap-2 bg-[#0F3D2E] px-7 font-black text-white hover:bg-[#18513D]" onClick={() => navigate("/login")}>
+                  Acessar plataforma
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
+                <Button size="lg" variant="outline" className="h-12 gap-2 border-[#0F3D2E]/20 bg-white px-7 font-bold text-[#0F3D2E] hover:bg-[#EEF4E3]" onClick={() => navigate("/library")}>
+                  <BookOpen className="h-5 w-5" />
+                  Ler livros
+                </Button>
+              </div>
+              <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-semibold text-slate-600">
+                <span className="inline-flex items-center gap-2"><PenLine className="h-4 w-4 text-[#266B3D]" />Escrita</span>
+                <span className="inline-flex items-center gap-2"><BookOpen className="h-4 w-4 text-[#266B3D]" />Avaliacao</span>
+                <span className="inline-flex items-center gap-2"><Library className="h-4 w-4 text-[#266B3D]" />Publicacao</span>
+              </div>
             </div>
+
+            <aside className="lumi-bookcase" aria-label="Publicacoes recentes">
+              <div className="flex items-end justify-between gap-4 border-b border-white/16 pb-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#F4C430]">Biblioteca digital</p>
+                  <h2 className="mt-2 text-2xl font-black text-white">Novas historias</h2>
+                </div>
+                <span className="text-sm font-bold text-white/70">{isLoading ? "..." : publications.length}</span>
+              </div>
+
+              <div className="mt-5 grid grid-cols-3 gap-3">
+                {featured.length > 0
+                  ? featured.map((publication) => {
+                      const book = publication.book;
+                      if (!book) return null;
+                      return (
+                        <button
+                          key={publication.id}
+                          type="button"
+                          onClick={() => navigate(`/library/book/${book.id}`)}
+                          className="group min-w-0 text-left"
+                          title={`Ler ${book.title}`}
+                        >
+                          <span className="block aspect-[3/4] overflow-hidden rounded-md border border-white/18 bg-[#F7F3E9] shadow-xl transition-transform group-hover:-translate-y-1">
+                            {book.coverImageUrl ? (
+                              <img src={book.coverImageUrl} alt="" className="h-full w-full object-cover" />
+                            ) : (
+                              <span className="flex h-full items-center justify-center bg-[#F7F3E9] text-[#0F3D2E]"><BookOpen className="h-8 w-8" /></span>
+                            )}
+                          </span>
+                          <span className="mt-2 block truncate text-xs font-bold text-white">{book.title}</span>
+                        </button>
+                      );
+                    })
+                  : [0, 1, 2].map((item) => (
+                      <span key={item} className="flex aspect-[3/4] items-center justify-center rounded-md border border-white/16 bg-white/8 text-white/45">
+                        <BookOpen className="h-7 w-7" />
+                      </span>
+                    ))}
+              </div>
+              <Button variant="ghost" className="mt-5 w-full gap-2 border border-white/14 text-white hover:bg-white/10 hover:text-white" onClick={() => navigate("/library")}>
+                Abrir biblioteca
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </aside>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-[#0F3D2E]/10 bg-white px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 text-sm text-[#0F3D2E]/65 md:flex-row md:items-center">
+      <footer className="bg-white px-4 py-7 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 text-sm text-slate-500 sm:flex-row sm:items-center">
           <BrandLogo compact />
-          <p>2026 Lumi Educa.</p>
+          <p>2026 Lumi Educa</p>
         </div>
       </footer>
     </div>

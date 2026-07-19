@@ -1,0 +1,11 @@
+<svg width="120" height="104" viewBox="0 0 120 104" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Lumi Educa</title>
+  <path d="M59.6 54.2C47.8 43.8 34.4 39.4 16.6 40.8L10 71.9C29.1 69.6 45.1 75 59.6 86.3V54.2Z" stroke="#F7F3E9" stroke-width="6.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M60.4 54.2C72.2 43.8 85.6 39.4 103.4 40.8L110 71.9C90.9 69.6 74.9 75 60.4 86.3V54.2Z" stroke="#F7F3E9" stroke-width="6.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M10.2 80C29.3 73.9 46 78.1 60 91.8C74 78.1 90.7 73.9 109.8 80" stroke="#A8D86F" stroke-width="6.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M60 56V31.8" stroke="#F7F3E9" stroke-width="6.2" stroke-linecap="round"/>
+  <path d="M58.9 38.9C46.2 37.2 37.2 29.9 32.2 16.8C45.2 17.9 55 24.8 61.2 37.4L58.9 38.9Z" fill="#6DB33F"/>
+  <path d="M61.1 39.6C63.3 23.3 73.8 13.2 91.8 9.3C90.2 25.4 80.6 35.8 62 43.1L61.1 39.6Z" fill="#F4C430"/>
+  <path d="M62.1 42.6C70.1 35.4 77 27.2 82.7 18.2" stroke="#266B3D" stroke-width="2.4" stroke-linecap="round"/>
+  <circle cx="60" cy="9" r="6.4" fill="#A8D86F"/>
+</svg>

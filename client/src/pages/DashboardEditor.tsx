@@ -275,8 +275,7 @@ export default function DashboardEditor() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div className="lumi-brazil-panel rounded-xl p-6 text-white shadow-xl">
-          <div className="absolute right-5 top-5 hidden h-28 w-44 rotate-3 opacity-90 md:block lumi-brazil-flag" />
+        <div className="lumi-highlight-panel rounded-xl p-6 text-white shadow-xl">
           <div className="relative z-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div className="max-w-3xl">
               <Badge className="mb-4 border border-[#F4C430]/35 bg-[#F4C430]/18 px-3 py-1 text-[#F4C430] hover:bg-[#F4C430]/18">
@@ -330,7 +329,7 @@ export default function DashboardEditor() {
                     <p className="text-sm text-slate-600">{item.label}</p>
                     <p className="mt-1 text-3xl font-bold text-slate-950">{item.value}</p>
                   </div>
-                  <Icon className="h-8 w-8 text-[#123C8C]" />
+                  <Icon className="h-8 w-8 text-[#266B3D]" />
                 </CardContent>
               </Card>
             );
@@ -338,10 +337,10 @@ export default function DashboardEditor() {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-          <Card className="lumi-cup-card rounded-lg">
+          <Card className="lumi-surface-card rounded-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <CalendarDays className="h-5 w-5 text-[#123C8C]" />
+                <CalendarDays className="h-5 w-5 text-[#266B3D]" />
                 Relatório mensal - {monthLabel()}
               </CardTitle>
             </CardHeader>
@@ -370,7 +369,7 @@ export default function DashboardEditor() {
             </CardContent>
           </Card>
 
-          <Card className="lumi-cup-card rounded-lg">
+          <Card className="lumi-surface-card rounded-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-[#F4C430]" />
@@ -411,10 +410,10 @@ export default function DashboardEditor() {
           </Card>
         </div>
 
-        <Card className="lumi-cup-card rounded-lg">
+        <Card className="lumi-surface-card rounded-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-[#123C8C]" />
+              <Users className="h-5 w-5 text-[#266B3D]" />
               Designar alunos para educadores e turmas
             </CardTitle>
           </CardHeader>
@@ -481,7 +480,7 @@ export default function DashboardEditor() {
           </CardContent>
         </Card>
 
-        <Card className="lumi-cup-card rounded-lg">
+        <Card className="lumi-surface-card rounded-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-amber-600" />
@@ -495,7 +494,7 @@ export default function DashboardEditor() {
               </p>
             ) : (
               performance.slice(0, 8).map((student, index) => (
-                <div key={student.id} className="flex flex-col gap-3 rounded-lg border border-[#0F3D2E]/10 bg-white/72 p-4 transition hover:border-[#123C8C]/35 hover:shadow-sm md:flex-row md:items-center md:justify-between">
+                <div key={student.id} className="flex flex-col gap-3 rounded-lg border border-[#0F3D2E]/10 bg-white/72 p-4 transition hover:border-[#266B3D]/35 hover:shadow-sm md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F4C430] text-sm font-bold text-[#0F3D2E] shadow-sm">
                       {index + 1}
@@ -526,7 +525,7 @@ export default function DashboardEditor() {
         </Card>
 
         <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
-          <Card className="lumi-cup-card rounded-lg">
+          <Card className="lumi-surface-card rounded-lg">
             <CardHeader>
               <CardTitle>Livros para preparação editorial</CardTitle>
             </CardHeader>
@@ -549,7 +548,7 @@ export default function DashboardEditor() {
                     <div
                       key={book.id}
                       className={`rounded-lg border p-4 transition hover:shadow-sm ${
-                        selectedBook?.id === book.id ? "border-[#F4C430] bg-[#fff8d7]" : "border-[#0F3D2E]/10 bg-white/78 hover:border-[#123C8C]/35"
+                        selectedBook?.id === book.id ? "border-[#F4C430] bg-[#fff8d7]" : "border-[#0F3D2E]/10 bg-white/78 hover:border-[#266B3D]/35"
                       }`}
                     >
                       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
@@ -557,7 +556,7 @@ export default function DashboardEditor() {
                           <div className="flex flex-wrap items-center gap-3">
                             <h3 className="font-semibold text-slate-950">{book.title}</h3>
                             <Badge variant="secondary">{statusLabels[book.status] ?? book.status}</Badge>
-                            <Badge className="bg-[#123C8C] text-white hover:bg-[#123C8C]">IA {insight.score.toFixed(1)}</Badge>
+                            <Badge className="bg-[#266B3D] text-white hover:bg-[#266B3D]">IA {insight.score.toFixed(1)}</Badge>
                           </div>
                           <p className="mt-1 text-sm text-slate-600">{book.description || "Sem descrição cadastrada."}</p>
                           <p className="mt-2 text-sm text-slate-600">
@@ -628,10 +627,10 @@ export default function DashboardEditor() {
             </CardContent>
           </Card>
 
-          <Card className="lumi-cup-card rounded-lg">
+          <Card className="lumi-surface-card rounded-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-[#123C8C]" />
+                <Sparkles className="h-5 w-5 text-[#266B3D]" />
                 Revisor de layout e IA interna
               </CardTitle>
             </CardHeader>
@@ -666,14 +665,14 @@ export default function DashboardEditor() {
                       </div>
                       <div className="rounded-lg bg-white p-4 text-center shadow-sm">
                         <p className="text-sm text-slate-600">Nota IA</p>
-                        <p className="text-3xl font-bold text-[#123C8C]">{selectedInsight.score.toFixed(1)}</p>
+                        <p className="text-3xl font-bold text-[#266B3D]">{selectedInsight.score.toFixed(1)}</p>
                       </div>
                     </div>
                   </div>
 
                   <div>
                     <h4 className="mb-2 flex items-center gap-2 font-semibold text-slate-950">
-                      <BarChart3 className="h-4 w-4 text-[#123C8C]" />
+                      <BarChart3 className="h-4 w-4 text-[#266B3D]" />
                       Por que a IA deu essa nota
                     </h4>
                     <div className="space-y-2">

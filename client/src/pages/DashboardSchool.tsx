@@ -245,10 +245,15 @@ export default function DashboardSchool() {
               </Badge>
               <h1 className="mt-4 text-4xl font-black tracking-normal md:text-5xl">Visao da direcao</h1>
               <p className="mt-3 max-w-3xl text-lg leading-8 text-white/78">
-                Tudo que a escola precisa acompanhar: uso da plataforma, desempenho, turmas, equipe, livros, pendencias e relatorios.
+                Dados atualizados de {schoolName}.
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
-                {["Acesso real", "Dados por escola", "Relatorios para CP", "Fluxo de publicacao"].map((item) => (
+                {[
+                  `${students.length} alunos`,
+                  `${classInsights.length} turmas`,
+                  `${pendingBooks.length} pendencias`,
+                  `${publishedBooks.length} publicados`,
+                ].map((item) => (
                   <span key={item} className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em]">
                     {item}
                   </span>
