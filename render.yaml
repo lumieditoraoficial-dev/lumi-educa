@@ -6,7 +6,7 @@ services:
     region: oregon
     branch: main
     buildCommand: pnpm install --frozen-lockfile && pnpm build
-    startCommand: pnpm db:push && pnpm start
+    startCommand: pnpm start
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
